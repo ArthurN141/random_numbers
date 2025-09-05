@@ -21,7 +21,7 @@
     padding: 30px;
     border-radius: 10px;
     text-align: center;
-    width: 350px; /* moins large */
+    width: 350px;
     max-height: 90vh;
     overflow: hidden;
     box-shadow: 0 0 20px #0f0;
@@ -71,8 +71,8 @@
     transform: translate(-50%, -50%);
     background: #e63946;
     color: #fff;
-    padding: 30px 60px; /* plus grande */
-    font-size: 28px;    /* plus grande */
+    padding: 30px 60px;
+    font-size: 28px;
     font-weight: bold;
     border-radius: 10px;
     display: none;
@@ -80,9 +80,26 @@
     box-shadow: 0 0 30px #fff;
     text-align: center;
   }
+  /* Bouton audio */
+  #audio-toggle {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    font-size: 24px;
+    color: #0f0;
+    cursor: pointer;
+    user-select: none;
+    z-index: 1000;
+  }
 </style>
 </head>
 <body>
+<!-- Musique en boucle -->
+<audio id="bg-music" src="let_him_cook.mp3" loop></audio>
+
+<!-- Bouton mute/unmute -->
+<div id="audio-toggle">🔊</div>
+
 <div class="container" id="container">
   <h1>Generate Random Numbers</h1>
   <input type="number" id="from" placeholder="From">
@@ -97,7 +114,24 @@
 <div class="popup" id="popup">⚠️ WARNING 451 Critical errors detected !</div>
 
 <script>
+const bgMusic = document.getElementById("bg-music");
+const audioToggle = document.getElementById("audio-toggle");
+
+function startMusic() {
+  if (bgMusic.paused) {
+    bgMusic.play().catch(err => console.log("Autoplay bloqué:", err));
+  }
+}
+
+// Toggle mute/unmute
+audioToggle.addEventListener("click", () => {
+  bgMusic.muted = !bgMusic.muted;
+  audioToggle.textContent = bgMusic.muted ? "🔇" : "🔊";
+});
+
 function fakeGenerate() {
+  startMusic(); // démarre la musique avec le Generate
+
   const container = document.getElementById("container");
   const resultElement = document.getElementById("result");
   const progressBar = document.querySelector(".progress-bar");
@@ -107,7 +141,6 @@ function fakeGenerate() {
   progressBar.style.display = "block";
   progress.style.width = "0%";
 
-  // Texte animé (points + pourcentage aléatoire)
   let dots = "";
   let dotInterval = setInterval(() => {
     dots = dots.length < 3 ? dots + "." : "";
@@ -115,9 +148,8 @@ function fakeGenerate() {
     resultElement.innerHTML = `Processing${dots} (using ${cpuUsage}% of CPU)`;
   }, 500);
 
-  // Progression barre sur 4 secondes
   let width = 0;
-  const totalTicks = 40; // 4 sec / 0.1s
+  const totalTicks = 40;
   const increment = 100 / totalTicks;
   let tick = 0;
   let interval = setInterval(() => {
@@ -137,10 +169,8 @@ function startErrorScroll() {
   const container = document.getElementById("container");
   const resultElement = document.getElementById("result");
 
-  // Effacer les champs
   container.querySelectorAll('input, button, h1').forEach(el => el.style.display = 'none');
 
-  // Générer 200 lignes d'erreurs fictives
   const errorTemplates = [
     "Error: Failed to allocate memory at 0x0042FFAA",
     "Warning: Unknown HTML tag detected",
@@ -164,9 +194,8 @@ function startErrorScroll() {
     errors.push(msg);
   }
 
-  // Défilement des erreurs sur 4 secondes (200 lignes / 4000ms)
   let index = 0;
-  const intervalTime = 4000 / errors.length; // vitesse ajustée
+  const intervalTime = 4000 / errors.length;
   const interval = setInterval(() => {
     if(index < errors.length){
       resultElement.innerHTML += errors[index] + "<br>";
