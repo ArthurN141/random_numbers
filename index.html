@@ -64,6 +64,25 @@
       font-size: 18px;
       font-weight: bold;
       color: #1d3557;
+      min-height: 30px;
+    }
+
+    /* Barre de chargement */
+    .progress-bar {
+      margin-top: 15px;
+      width: 100%;
+      height: 10px;
+      background: #eee;
+      border-radius: 5px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .progress {
+      height: 100%;
+      width: 0%;
+      background: #e63946;
+      transition: width 0.2s linear;
     }
   </style>
 </head>
@@ -76,25 +95,45 @@
     <label for="to">To:</label>
     <input type="number" id="to" placeholder="Enter maximum number">
     
-    <button onclick="generateNumber()">Generate</button>
+    <button onclick="fakeGenerate()">Generate</button>
+    
+    <div class="progress-bar">
+      <div class="progress" id="progress"></div>
+    </div>
     <div class="result" id="result"></div>
   </div>
 
   <script>
-    function generateNumber() {
-      const from = parseInt(document.getElementById("from").value);
-      const to = parseInt(document.getElementById("to").value);
+    function fakeGenerate() {
       const resultElement = document.getElementById("result");
+      const progressBar = document.querySelector(".progress-bar");
+      const progress = document.getElementById("progress");
 
-      if (isNaN(from) || isNaN(to) || from > to) {
-        resultElement.innerHTML = "⚠️ Please enter valid numbers.";
-        return;
-      }
+      // Reset
+      resultElement.innerHTML = "";
+      progressBar.style.display = "block";
+      progress.style.width = "0%";
 
-      const randomNumber = Math.floor(Math.random() * (to - from + 1)) + from;
-      resultElement.innerHTML = "🎲 Result: " + randomNumber;
+      // Texte animé (les points qui bougent)
+      let dots = "";
+      let dotInterval = setInterval(() => {
+        dots = dots.length < 3 ? dots + "." : "";
+        resultElement.innerHTML = `Processing${dots} (using 80% of CPU)`;
+      }, 500);
+
+      // Progression de la barre
+      let width = 0;
+      let interval = setInterval(() => {
+        if (width >= 100) {
+          clearInterval(interval);
+          clearInterval(dotInterval);
+          resultElement.innerHTML = "✅ Done! (but nothing was generated)";
+        } else {
+          width += 5;
+          progress.style.width = width + "%";
+        }
+      }, 200);
     }
   </script>
 </body>
 </html>
-
