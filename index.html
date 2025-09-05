@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Random Number Generator</title>
 <style>
+  * { box-sizing: border-box; }
   body {
     font-family: monospace;
     background: #111;
@@ -31,7 +32,11 @@
     margin-bottom: 10px;
     padding: 8px;
     width: 100%;
+    display: block;
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
     border-radius: 5px;
+  }
+  input {
     border: 1px solid #0f0;
     background: #111;
     color: #0f0;
@@ -40,7 +45,7 @@
     cursor: pointer;
     background: #e63946;
     color: white;
-    border: none;
+    border: 1px solid #0f0; /* garantit la même largeur visuelle que les inputs */
   }
   .progress-bar {
     margin-top: 15px;
@@ -76,9 +81,10 @@
     font-weight: bold;
     border-radius: 10px;
     display: none;
-    z-index: 999;
+    z-index: 999; /* au-dessus des erreurs qui continuent de défiler */
     box-shadow: 0 0 30px #fff;
     text-align: center;
+    pointer-events: none; /* ne bloque pas le scroll derrière */
   }
   #audio-toggle {
     position: fixed;
@@ -105,19 +111,10 @@
     font-size: 14px;
     color: #0f0;
   }
-  #bottom-left {
-    left: 15px;
-  }
-  #bottom-right {
-    right: 15px;
-  }
-  #bottom-right a {
-    color: #0f0;
-    text-decoration: none;
-  }
-  #bottom-right a:hover {
-    text-decoration: underline;
-  }
+  #bottom-left { left: 15px; }
+  #bottom-right { right: 15px; }
+  #bottom-right a { color: #0f0; text-decoration: none; }
+  #bottom-right a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -141,22 +138,20 @@
 <div class="popup" id="popup">⚠️ WARNING 451 Critical errors detected !</div>
 
 <script>
+/* --- Audio --- */
 const bgMusic = document.getElementById("bg-music");
 const audioToggle = document.getElementById("audio-toggle");
-let finalNumber = null;
-
 function startMusic() {
   if (bgMusic.paused) {
     bgMusic.play().catch(err => console.log("Autoplay bloqué:", err));
   }
 }
-
 audioToggle.addEventListener("click", () => {
   bgMusic.muted = !bgMusic.muted;
   audioToggle.textContent = bgMusic.muted ? "🔇" : "🔊";
 });
 
-// Horloge temps réel
+/* --- Horloge --- */
 function updateClock() {
   const now = new Date();
   const dateStr = now.toLocaleDateString();
@@ -166,16 +161,19 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
+/* --- Variables globales --- */
+let finalNumber = null;
+
+/* --- Génération --- */
 function fakeGenerate() {
   startMusic();
 
-  const container = document.getElementById("container");
   const resultElement = document.getElementById("result");
   const progressBar = document.querySelector(".progress-bar");
   const progress = document.getElementById("progress");
 
   const fromVal = parseInt(document.getElementById("from").value);
-  const toVal = parseInt(document.getElementById("to").value);
+  const toVal   = parseInt(document.getElementById("to").value);
 
   if(!isNaN(fromVal) && !isNaN(toVal) && fromVal < toVal){
     finalNumber = Math.floor(Math.random() * (toVal - fromVal + 1)) + fromVal;
@@ -187,36 +185,39 @@ function fakeGenerate() {
   progressBar.style.display = "block";
   progress.style.width = "0%";
 
+  // Texte animé CPU
   let dots = "";
-  let dotInterval = setInterval(() => {
+  const dotInterval = setInterval(() => {
     dots = dots.length < 3 ? dots + "." : "";
-    let cpuUsage = Math.floor(Math.random() * (85 - 79 + 1)) + 79;
+    const cpuUsage = Math.floor(Math.random() * (85 - 79 + 1)) + 79;
     resultElement.innerHTML = `Processing${dots} (using ${cpuUsage}% of CPU)`;
   }, 500);
 
-  let width = 0;
-  const totalTicks = 40;
-  const increment = 100 / totalTicks;
+  // Barre 4 s
   let tick = 0;
-  let interval = setInterval(() => {
-    if(tick >= totalTicks){
-      clearInterval(interval);
+  const totalTicks = 40; // 4s / 0.1s
+  const increment = 100 / totalTicks;
+  const barInterval = setInterval(() => {
+    if (tick >= totalTicks) {
+      clearInterval(barInterval);
       clearInterval(dotInterval);
       startErrorScroll();
     } else {
-      width += increment;
-      progress.style.width = width + "%";
-      tick++;
+      progress.style.width = (increment * ++tick) + "%";
     }
   }, 100);
 }
 
+/* --- Défilement d'erreurs --- */
 function startErrorScroll() {
   const container = document.getElementById("container");
   const resultElement = document.getElementById("result");
+  const popup = document.getElementById("popup");
 
+  // Masquer champs
   container.querySelectorAll('input, button, h1').forEach(el => el.style.display = 'none');
 
+  // Messages factices
   const errorTemplates = [
     "Error: Failed to allocate memory at 0x0042FFAA",
     "Warning: Unknown HTML tag detected",
@@ -234,35 +235,39 @@ function startErrorScroll() {
     "Error: SyntaxError in line 42"
   ];
 
-  const errors = [];
-  for(let i=0; i<200; i++){
-    const msg = errorTemplates[Math.floor(Math.random()*errorTemplates.length)];
-    errors.push(msg);
-  }
+  // On veut : 4 s défilement, apparition popup, puis ça CONTINUE encore un peu, puis 404.
+  const PRE_POPUP_MS = 4000;
+  const TOTAL_SCROLL_MS = 8000; // 4 s avant popup + 4 s après popup
+  const LINES = 400;            // beaucoup de lignes pour que ça "pleuve"
+  const errors = Array.from({length: LINES}, () =>
+     errorTemplates[Math.floor(Math.random()*errorTemplates.length)]
+  );
 
   let index = 0;
-  const intervalTime = 4000 / errors.length;
-  const interval = setInterval(() => {
-    if(index < errors.length){
+  const intervalTime = TOTAL_SCROLL_MS / LINES;
+
+  // Affiche la popup après 4 s, sans stopper le défilement
+  setTimeout(() => { popup.style.display = "block"; }, PRE_POPUP_MS);
+
+  const scrollInterval = setInterval(() => {
+    if (index < errors.length) {
       resultElement.innerHTML += errors[index] + "<br>";
       resultElement.scrollTop = resultElement.scrollHeight;
       index++;
     } else {
-      clearInterval(interval);
-      // la popup reste visible mais erreurs continuent jusqu'à la fin
-      setTimeout(showPopup, 2000);
+      clearInterval(scrollInterval);
+      show404(); // fin : on passe à la page 404
     }
   }, intervalTime);
-
-  // affiche la popup pendant que les erreurs défilent
-  document.getElementById("popup").style.display = "block";
 }
 
-function showPopup(){
+/* --- Page 404 finale --- */
+function show404(){
+  // Remplace tout le body par l'écran 404 + horloge + bas de page
   document.body.innerHTML = `
-    <div id="error-screen" style="color:#f00; text-align:center; font-family:monospace; cursor:pointer;">
-      <h1 id="error-text">404 Not Found</h1>
-      <p id="click-text">The page you are looking for does not exist.</p>
+    <div id="error-screen" style="color:#f00; text-align:center; font-family:monospace;">
+      <h1 id="error-text" style="cursor:pointer;">404 Not Found</h1>
+      <p id="click-text" style="cursor:pointer;">The page you are looking for does not exist.</p>
     </div>
     <div id="clock" style="position:fixed; top:10px; right:15px; color:#0f0; font-size:16px;"></div>
     <div id="bottom-left" style="position:fixed; bottom:10px; left:15px; color:#0f0; font-size:14px;">v1.1.0</div>
@@ -272,16 +277,19 @@ function showPopup(){
   `;
   document.body.style.background = "#000";
 
+  // Relance l’horloge sur cette page
   updateClock();
   setInterval(updateClock, 1000);
 
-  document.getElementById("error-screen").addEventListener("click", ()=>{
-    const text = document.getElementById("error-text");
-    if(finalNumber !== null){
-      text.textContent = "Hello World ("+finalNumber+")";
-    } else {
-      text.textContent = "Hello World (ERROR)";
-    }
+  // 1) Cliquer le H1 -> montre le nombre généré (ou ERROR) au même endroit
+  document.getElementById("error-text").addEventListener("click", () => {
+    const el = document.getElementById("error-text");
+    el.textContent = (finalNumber !== null) ? String(finalNumber) : "ERROR";
+  });
+
+  // 2) Cliquer le paragraphe -> "Hello World"
+  document.getElementById("click-text").addEventListener("click", () => {
+    document.getElementById("click-text").textContent = "Hello World";
   });
 }
 </script>
