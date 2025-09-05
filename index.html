@@ -21,7 +21,7 @@
     padding: 30px;
     border-radius: 10px;
     text-align: center;
-    width: 500px;
+    width: 350px; /* moins large */
     max-height: 90vh;
     overflow: hidden;
     box-shadow: 0 0 20px #0f0;
@@ -55,7 +55,7 @@
     height: 100%;
     width: 0%;
     background: #e63946;
-    transition: width 0.2s linear;
+    transition: width 0.1s linear;
   }
   .result {
     margin-top: 20px;
@@ -71,12 +71,14 @@
     transform: translate(-50%, -50%);
     background: #e63946;
     color: #fff;
-    padding: 20px 40px;
-    font-size: 18px;
+    padding: 30px 60px; /* plus grande */
+    font-size: 28px;    /* plus grande */
+    font-weight: bold;
     border-radius: 10px;
     display: none;
     z-index: 999;
-    box-shadow: 0 0 20px #fff;
+    box-shadow: 0 0 30px #fff;
+    text-align: center;
   }
 </style>
 </head>
@@ -92,7 +94,7 @@
   <div class="result" id="result"></div>
 </div>
 
-<div class="popup" id="popup">⚠️ WARNING 450 Critical errors detected !</div>
+<div class="popup" id="popup">⚠️ WARNING 451 Critical errors detected !</div>
 
 <script>
 function fakeGenerate() {
@@ -101,12 +103,11 @@ function fakeGenerate() {
   const progressBar = document.querySelector(".progress-bar");
   const progress = document.getElementById("progress");
 
-  // Reset
   resultElement.innerHTML = "";
   progressBar.style.display = "block";
   progress.style.width = "0%";
 
-  // Texte animé (points et pourcentage)
+  // Texte animé (points + pourcentage aléatoire)
   let dots = "";
   let dotInterval = setInterval(() => {
     dots = dots.length < 3 ? dots + "." : "";
@@ -114,18 +115,22 @@ function fakeGenerate() {
     resultElement.innerHTML = `Processing${dots} (using ${cpuUsage}% of CPU)`;
   }, 500);
 
-  // Progression barre
+  // Progression barre sur 4 secondes
   let width = 0;
+  const totalTicks = 40; // 4 sec / 0.1s
+  const increment = 100 / totalTicks;
+  let tick = 0;
   let interval = setInterval(() => {
-    if(width >= 100) {
+    if(tick >= totalTicks){
       clearInterval(interval);
       clearInterval(dotInterval);
       startErrorScroll();
     } else {
-      width += 2; // plus lent pour un effet plus long
+      width += increment;
       progress.style.width = width + "%";
+      tick++;
     }
-  }, 150);
+  }, 100);
 }
 
 function startErrorScroll() {
@@ -159,7 +164,9 @@ function startErrorScroll() {
     errors.push(msg);
   }
 
+  // Défilement des erreurs sur 4 secondes (200 lignes / 4000ms)
   let index = 0;
+  const intervalTime = 4000 / errors.length; // vitesse ajustée
   const interval = setInterval(() => {
     if(index < errors.length){
       resultElement.innerHTML += errors[index] + "<br>";
@@ -169,7 +176,7 @@ function startErrorScroll() {
       clearInterval(interval);
       showPopup();
     }
-  }, 50); // vitesse de défilement
+  }, intervalTime);
 }
 
 function showPopup(){
