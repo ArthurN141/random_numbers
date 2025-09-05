@@ -1,1 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Number Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 300px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 20px;
+      color: #333;
+    }
+
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      background: #e63946;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #c92d3a;
+    }
+
+    .result {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #1d3557;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Generate Random Numbers</h1>
+    <label for="from">From:</label>
+    <input type="number" id="from" placeholder="Enter minimum number">
+    
+    <label for="to">To:</label>
+    <input type="number" id="to" placeholder="Enter maximum number">
+    
+    <button onclick="generateNumber()">Generate</button>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    function generateNumber() {
+      const from = parseInt(document.getElementById("from").value);
+      const to = parseInt(document.getElementById("to").value);
+      const resultElement = document.getElementById("result");
+
+      if (isNaN(from) || isNaN(to) || from > to) {
+        resultElement.innerHTML = "⚠️ Please enter valid numbers.";
+        return;
+      }
+
+      const randomNumber = Math.floor(Math.random() * (to - from + 1)) + from;
+      resultElement.innerHTML = "🎲 Result: " + randomNumber;
+    }
+  </script>
+</body>
+</html>
 
