@@ -103,37 +103,37 @@
     <div class="result" id="result"></div>
   </div>
 
-  <script>
-    function fakeGenerate() {
-      const resultElement = document.getElementById("result");
-      const progressBar = document.querySelector(".progress-bar");
-      const progress = document.getElementById("progress");
+<script>
+  function fakeGenerate() {
+    const resultElement = document.getElementById("result");
+    const progressBar = document.querySelector(".progress-bar");
+    const progress = document.getElementById("progress");
 
-      // Reset
-      resultElement.innerHTML = "";
-      progressBar.style.display = "block";
-      progress.style.width = "0%";
+    // Reset
+    resultElement.innerHTML = "";
+    progressBar.style.display = "block";
+    progress.style.width = "0%";
 
-      // Texte animé (les points qui bougent)
-      let dots = "";
-      let dotInterval = setInterval(() => {
-        dots = dots.length < 3 ? dots + "." : "";
-        resultElement.innerHTML = `Processing${dots} (using 80% of CPU)`;
-      }, 500);
+    // Texte animé (les points qui bougent + pourcentage aléatoire)
+    let dots = "";
+    let dotInterval = setInterval(() => {
+      dots = dots.length < 3 ? dots + "." : "";
+      let cpuUsage = Math.floor(Math.random() * (85 - 79 + 1)) + 79; // entre 79 et 85
+      resultElement.innerHTML = `Processing${dots} (using ${cpuUsage}% of CPU)`;
+    }, 500);
 
-      // Progression de la barre
-      let width = 0;
-      let interval = setInterval(() => {
-        if (width >= 100) {
-          clearInterval(interval);
-          clearInterval(dotInterval);
-          resultElement.innerHTML = "✅ Done! (but nothing was generated)";
-        } else {
-          width += 5;
-          progress.style.width = width + "%";
-        }
-      }, 200);
-    }
-  </script>
-</body>
-</html>
+    // Progression de la barre
+    let width = 0;
+    let interval = setInterval(() => {
+      if (width >= 100) {
+        clearInterval(interval);
+        clearInterval(dotInterval);
+        resultElement.innerHTML = "✅ Done! (but nothing was generated)";
+      } else {
+        width += 5;
+        progress.style.width = width + "%";
+      }
+    }, 200);
+  }
+</script>
+
