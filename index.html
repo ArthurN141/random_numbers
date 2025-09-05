@@ -22,7 +22,7 @@
     padding: 30px;
     border-radius: 10px;
     text-align: center;
-    width: 350px;
+    width: 450px; /* plus large */
     max-height: 90vh;
     overflow: hidden;
     box-shadow: 0 0 20px #0f0;
@@ -45,7 +45,7 @@
     cursor: pointer;
     background: #e63946;
     color: white;
-    border: 1px solid #0f0; /* garantit la même largeur visuelle que les inputs */
+    border: none; /* plus de contour vert */
   }
   .progress-bar {
     margin-top: 15px;
@@ -81,10 +81,10 @@
     font-weight: bold;
     border-radius: 10px;
     display: none;
-    z-index: 999; /* au-dessus des erreurs qui continuent de défiler */
+    z-index: 999; /* au-dessus des erreurs */
     box-shadow: 0 0 30px #fff;
     text-align: center;
-    pointer-events: none; /* ne bloque pas le scroll derrière */
+    pointer-events: none; /* ne bloque pas scroll */
   }
   #audio-toggle {
     position: fixed;
@@ -96,7 +96,6 @@
     user-select: none;
     z-index: 1000;
   }
-  /* Horloge en haut à droite */
   #clock {
     position: fixed;
     top: 10px;
@@ -104,7 +103,6 @@
     font-size: 16px;
     color: #0f0;
   }
-  /* Texte en bas */
   #bottom-left, #bottom-right {
     position: fixed;
     bottom: 10px;
@@ -142,9 +140,7 @@
 const bgMusic = document.getElementById("bg-music");
 const audioToggle = document.getElementById("audio-toggle");
 function startMusic() {
-  if (bgMusic.paused) {
-    bgMusic.play().catch(err => console.log("Autoplay bloqué:", err));
-  }
+  if (bgMusic.paused) bgMusic.play().catch(err => console.log("Autoplay bloqué:", err));
 }
 audioToggle.addEventListener("click", () => {
   bgMusic.muted = !bgMusic.muted;
@@ -156,7 +152,8 @@ function updateClock() {
   const now = new Date();
   const dateStr = now.toLocaleDateString();
   const timeStr = now.toLocaleTimeString();
-  document.getElementById("clock").textContent = dateStr + " " + timeStr;
+  const el = document.getElementById("clock");
+  if(el) el.textContent = dateStr + " " + timeStr;
 }
 setInterval(updateClock, 1000);
 updateClock();
@@ -175,36 +172,30 @@ function fakeGenerate() {
   const fromVal = parseInt(document.getElementById("from").value);
   const toVal   = parseInt(document.getElementById("to").value);
 
-  if(!isNaN(fromVal) && !isNaN(toVal) && fromVal < toVal){
-    finalNumber = Math.floor(Math.random() * (toVal - fromVal + 1)) + fromVal;
-  } else {
-    finalNumber = null;
-  }
+  finalNumber = (!isNaN(fromVal) && !isNaN(toVal) && fromVal < toVal)
+    ? Math.floor(Math.random() * (toVal - fromVal + 1)) + fromVal
+    : null;
 
   resultElement.innerHTML = "";
   progressBar.style.display = "block";
   progress.style.width = "0%";
 
-  // Texte animé CPU
   let dots = "";
   const dotInterval = setInterval(() => {
     dots = dots.length < 3 ? dots + "." : "";
-    const cpuUsage = Math.floor(Math.random() * (85 - 79 + 1)) + 79;
+    const cpuUsage = Math.floor(Math.random() * (85-79+1))+79;
     resultElement.innerHTML = `Processing${dots} (using ${cpuUsage}% of CPU)`;
   }, 500);
 
-  // Barre 4 s
   let tick = 0;
-  const totalTicks = 40; // 4s / 0.1s
+  const totalTicks = 40;
   const increment = 100 / totalTicks;
   const barInterval = setInterval(() => {
     if (tick >= totalTicks) {
       clearInterval(barInterval);
       clearInterval(dotInterval);
       startErrorScroll();
-    } else {
-      progress.style.width = (increment * ++tick) + "%";
-    }
+    } else progress.style.width = (increment * ++tick) + "%";
   }, 100);
 }
 
@@ -214,10 +205,8 @@ function startErrorScroll() {
   const resultElement = document.getElementById("result");
   const popup = document.getElementById("popup");
 
-  // Masquer champs
   container.querySelectorAll('input, button, h1').forEach(el => el.style.display = 'none');
 
-  // Messages factices
   const errorTemplates = [
     "Error: Failed to allocate memory at 0x0042FFAA",
     "Warning: Unknown HTML tag detected",
@@ -235,60 +224,45 @@ function startErrorScroll() {
     "Error: SyntaxError in line 42"
   ];
 
-  // On veut : 4 s défilement, apparition popup, puis ça CONTINUE encore un peu, puis 404.
   const PRE_POPUP_MS = 4000;
-  const TOTAL_SCROLL_MS = 8000; // 4 s avant popup + 4 s après popup
-  const LINES = 400;            // beaucoup de lignes pour que ça "pleuve"
+  const TOTAL_SCROLL_MS = 8000;
+  const LINES = 400;
   const errors = Array.from({length: LINES}, () =>
-     errorTemplates[Math.floor(Math.random()*errorTemplates.length)]
+    errorTemplates[Math.floor(Math.random()*errorTemplates.length)]
   );
 
   let index = 0;
   const intervalTime = TOTAL_SCROLL_MS / LINES;
 
-  // Affiche la popup après 4 s, sans stopper le défilement
   setTimeout(() => { popup.style.display = "block"; }, PRE_POPUP_MS);
 
   const scrollInterval = setInterval(() => {
-    if (index < errors.length) {
-      resultElement.innerHTML += errors[index] + "<br>";
+    if(index < errors.length){
+      resultElement.innerHTML += errors[index]+"<br>";
       resultElement.scrollTop = resultElement.scrollHeight;
       index++;
     } else {
       clearInterval(scrollInterval);
-      show404(); // fin : on passe à la page 404
+      show404();
     }
   }, intervalTime);
 }
 
 /* --- Page 404 finale --- */
 function show404(){
-  // Remplace tout le body par l'écran 404 + horloge + bas de page
+  // Écran 404 uniquement, supprime horloge et bas de page
   document.body.innerHTML = `
     <div id="error-screen" style="color:#f00; text-align:center; font-family:monospace;">
       <h1 id="error-text" style="cursor:pointer;">404 Not Found</h1>
       <p id="click-text" style="cursor:pointer;">The page you are looking for does not exist.</p>
     </div>
-    <div id="clock" style="position:fixed; top:10px; right:15px; color:#0f0; font-size:16px;"></div>
-    <div id="bottom-left" style="position:fixed; bottom:10px; left:15px; color:#0f0; font-size:14px;">v1.1.0</div>
-    <div id="bottom-right" style="position:fixed; bottom:10px; right:15px; color:#0f0; font-size:14px;">
-      <a href="https://discord.gg/PwjE47CA6t" target="_blank" style="color:#0f0; text-decoration:none;">We Want To Count</a>
-    </div>
   `;
   document.body.style.background = "#000";
 
-  // Relance l’horloge sur cette page
-  updateClock();
-  setInterval(updateClock, 1000);
-
-  // 1) Cliquer le H1 -> montre le nombre généré (ou ERROR) au même endroit
-  document.getElementById("error-text").addEventListener("click", () => {
-    const el = document.getElementById("error-text");
-    el.textContent = (finalNumber !== null) ? String(finalNumber) : "ERROR";
+  document.getElementById("error-text").addEventListener("click", ()=>{
+    document.getElementById("error-text").textContent = (finalNumber !== null) ? String(finalNumber) : "ERROR";
   });
-
-  // 2) Cliquer le paragraphe -> "Hello World"
-  document.getElementById("click-text").addEventListener("click", () => {
+  document.getElementById("click-text").addEventListener("click", ()=>{
     document.getElementById("click-text").textContent = "Hello World";
   });
 }
