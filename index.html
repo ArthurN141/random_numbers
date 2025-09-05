@@ -90,11 +90,42 @@
     user-select: none;
     z-index: 1000;
   }
+  /* Horloge en haut à droite */
+  #clock {
+    position: fixed;
+    top: 10px;
+    right: 15px;
+    font-size: 16px;
+    color: #0f0;
+  }
+  /* Texte en bas */
+  #bottom-left, #bottom-right {
+    position: fixed;
+    bottom: 10px;
+    font-size: 14px;
+    color: #0f0;
+  }
+  #bottom-left {
+    left: 15px;
+  }
+  #bottom-right {
+    right: 15px;
+  }
+  #bottom-right a {
+    color: #0f0;
+    text-decoration: none;
+  }
+  #bottom-right a:hover {
+    text-decoration: underline;
+  }
 </style>
 </head>
 <body>
 <audio id="bg-music" src="let_him_cook.m4a" loop></audio>
 <div id="audio-toggle">🔊</div>
+<div id="clock"></div>
+<div id="bottom-left">v1.1.0</div>
+<div id="bottom-right"><a href="https://discord.gg/PwjE47CA6t" target="_blank">We Want To Count</a></div>
 
 <div class="container" id="container">
   <h1>Generate Random Numbers</h1>
@@ -112,7 +143,7 @@
 <script>
 const bgMusic = document.getElementById("bg-music");
 const audioToggle = document.getElementById("audio-toggle");
-let finalNumber = null; // stocke le résultat final
+let finalNumber = null;
 
 function startMusic() {
   if (bgMusic.paused) {
@@ -125,6 +156,16 @@ audioToggle.addEventListener("click", () => {
   audioToggle.textContent = bgMusic.muted ? "🔇" : "🔊";
 });
 
+// Horloge temps réel
+function updateClock() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString();
+  const timeStr = now.toLocaleTimeString();
+  document.getElementById("clock").textContent = dateStr + " " + timeStr;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
 function fakeGenerate() {
   startMusic();
 
@@ -133,15 +174,13 @@ function fakeGenerate() {
   const progressBar = document.querySelector(".progress-bar");
   const progress = document.getElementById("progress");
 
-  // Récupère les bornes pour générer un nombre
   const fromVal = parseInt(document.getElementById("from").value);
   const toVal = parseInt(document.getElementById("to").value);
 
-  // Vérifie si bornes valides
   if(!isNaN(fromVal) && !isNaN(toVal) && fromVal < toVal){
     finalNumber = Math.floor(Math.random() * (toVal - fromVal + 1)) + fromVal;
   } else {
-    finalNumber = null; // cas invalide
+    finalNumber = null;
   }
 
   resultElement.innerHTML = "";
@@ -210,33 +249,40 @@ function startErrorScroll() {
       index++;
     } else {
       clearInterval(interval);
-      showPopup();
+      // la popup reste visible mais erreurs continuent jusqu'à la fin
+      setTimeout(showPopup, 2000);
     }
   }, intervalTime);
+
+  // affiche la popup pendant que les erreurs défilent
+  document.getElementById("popup").style.display = "block";
 }
 
 function showPopup(){
-  const popup = document.getElementById("popup");
-  popup.style.display = "block";
+  document.body.innerHTML = `
+    <div id="error-screen" style="color:#f00; text-align:center; font-family:monospace; cursor:pointer;">
+      <h1 id="error-text">404 Not Found</h1>
+      <p id="click-text">The page you are looking for does not exist.</p>
+    </div>
+    <div id="clock" style="position:fixed; top:10px; right:15px; color:#0f0; font-size:16px;"></div>
+    <div id="bottom-left" style="position:fixed; bottom:10px; left:15px; color:#0f0; font-size:14px;">v1.1.0</div>
+    <div id="bottom-right" style="position:fixed; bottom:10px; right:15px; color:#0f0; font-size:14px;">
+      <a href="https://discord.gg/PwjE47CA6t" target="_blank" style="color:#0f0; text-decoration:none;">We Want To Count</a>
+    </div>
+  `;
+  document.body.style.background = "#000";
 
-  setTimeout(()=>{
-    document.body.innerHTML = `
-      <div id="error-screen" style="color:#f00; text-align:center; font-family:monospace; cursor:pointer;">
-        <h1 id="error-text">404 Not Found</h1>
-        <p>The page you are looking for does not exist.</p>
-      </div>`;
-    document.body.style.background = "#000";
+  updateClock();
+  setInterval(updateClock, 1000);
 
-    // Quand on clique sur le texte, on remplace par le résultat
-    document.getElementById("error-screen").addEventListener("click", ()=>{
-      const text = document.getElementById("error-text");
-      if(finalNumber !== null){
-        text.textContent = finalNumber;
-      } else {
-        text.textContent = "ERROR";
-      }
-    });
-  }, 4000);
+  document.getElementById("error-screen").addEventListener("click", ()=>{
+    const text = document.getElementById("error-text");
+    if(finalNumber !== null){
+      text.textContent = "Hello World ("+finalNumber+")";
+    } else {
+      text.textContent = "Hello World (ERROR)";
+    }
+  });
 }
 </script>
 </body>
