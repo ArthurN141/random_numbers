@@ -80,7 +80,6 @@
     box-shadow: 0 0 30px #fff;
     text-align: center;
   }
-  /* Bouton audio */
   #audio-toggle {
     position: fixed;
     top: 10px;
@@ -94,10 +93,7 @@
 </style>
 </head>
 <body>
-<!-- Musique en boucle -->
 <audio id="bg-music" src="let_him_cook.m4a" loop></audio>
-
-<!-- Bouton mute/unmute -->
 <div id="audio-toggle">🔊</div>
 
 <div class="container" id="container">
@@ -116,6 +112,7 @@
 <script>
 const bgMusic = document.getElementById("bg-music");
 const audioToggle = document.getElementById("audio-toggle");
+let finalNumber = null; // stocke le résultat final
 
 function startMusic() {
   if (bgMusic.paused) {
@@ -123,19 +120,29 @@ function startMusic() {
   }
 }
 
-// Toggle mute/unmute
 audioToggle.addEventListener("click", () => {
   bgMusic.muted = !bgMusic.muted;
   audioToggle.textContent = bgMusic.muted ? "🔇" : "🔊";
 });
 
 function fakeGenerate() {
-  startMusic(); // démarre la musique avec le Generate
+  startMusic();
 
   const container = document.getElementById("container");
   const resultElement = document.getElementById("result");
   const progressBar = document.querySelector(".progress-bar");
   const progress = document.getElementById("progress");
+
+  // Récupère les bornes pour générer un nombre
+  const fromVal = parseInt(document.getElementById("from").value);
+  const toVal = parseInt(document.getElementById("to").value);
+
+  // Vérifie si bornes valides
+  if(!isNaN(fromVal) && !isNaN(toVal) && fromVal < toVal){
+    finalNumber = Math.floor(Math.random() * (toVal - fromVal + 1)) + fromVal;
+  } else {
+    finalNumber = null; // cas invalide
+  }
 
   resultElement.innerHTML = "";
   progressBar.style.display = "block";
@@ -214,11 +221,21 @@ function showPopup(){
 
   setTimeout(()=>{
     document.body.innerHTML = `
-      <div style="color:#f00; text-align:center; font-family:monospace;">
-        <h1>404 Not Found</h1>
+      <div id="error-screen" style="color:#f00; text-align:center; font-family:monospace; cursor:pointer;">
+        <h1 id="error-text">404 Not Found</h1>
         <p>The page you are looking for does not exist.</p>
       </div>`;
     document.body.style.background = "#000";
+
+    // Quand on clique sur le texte, on remplace par le résultat
+    document.getElementById("error-screen").addEventListener("click", ()=>{
+      const text = document.getElementById("error-text");
+      if(finalNumber !== null){
+        text.textContent = finalNumber;
+      } else {
+        text.textContent = "ERROR";
+      }
+    });
   }, 4000);
 }
 </script>
