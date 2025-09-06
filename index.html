@@ -5,133 +5,119 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Random Number Generator</title>
 <style>
-* { box-sizing: border-box; }
-body {
-  font-family: monospace;
-  background: #111;
-  color: #0f0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-  overflow: hidden;
-}
-/* Box initiale plus étroite */
-.initial-container {
-  width: 350px;
-  background: #000;
-  padding: 30px;
-  border-radius: 10px;
-  text-align: center;
-  max-height: 90vh;
-  overflow: hidden;
-  box-shadow: 0 0 20px #0f0;
-}
-
-/* Box générique (sera utilisée pour les erreurs) */
-.container {
-  width: 450px; /* largeur pour les erreurs */
-  background: #000;
-  padding: 30px;
-  border-radius: 10px;
-  text-align: center;
-  max-height: 90vh;
-  overflow: hidden;
-  box-shadow: 0 0 20px #0f0;
-}
-
-input, button {
-  font-family: monospace;
-  margin-bottom: 10px;
-  padding: 8px;
-  width: 100%;
-  display: block;
-  appearance: none; -webkit-appearance: none; -moz-appearance: none;
-  border-radius: 5px;
-}
-input {
-  border: 1px solid #0f0;
-  background: #111;
-  color: #0f0;
-}
-button {
-  cursor: pointer;
-  background: #e63946;
-  color: white;
-  border: none; /* plus de contour vert */
-}
-
-.progress-bar {
-  margin-top: 15px;
-  width: 100%;
-  height: 10px;
-  background: #222;
-  border-radius: 5px;
-  overflow: hidden;
-  display: none;
-}
-.progress {
-  height: 100%;
-  width: 0%;
-  background: #e63946;
-  transition: width 0.1s linear;
-}
-.result {
-  margin-top: 20px;
-  text-align: left;
-  font-size: 14px;
-  max-height: 400px;
-  overflow-y: auto;
-}
-.popup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #e63946;
-  color: #fff;
-  padding: 30px 60px;
-  font-size: 28px;
-  font-weight: bold;
-  border-radius: 10px;
-  display: none;
-  z-index: 999; /* au-dessus des erreurs */
-  box-shadow: 0 0 30px #fff;
-  text-align: center;
-  pointer-events: none; /* ne bloque pas le scroll derrière */
-}
-
-#audio-toggle {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  font-size: 24px;
-  color: #0f0;
-  cursor: pointer;
-  user-select: none;
-  z-index: 1000;
-}
-
-/* Horloge en haut à droite */
-#clock {
-  position: fixed;
-  top: 10px;
-  right: 15px;
-  font-size: 16px;
-  color: #0f0;
-}
-/* Texte en bas */
-#bottom-left, #bottom-right {
-  position: fixed;
-  bottom: 10px;
-  font-size: 14px;
-  color: #0f0;
-}
-#bottom-left { left: 15px; }
-#bottom-right { right: 15px; }
-#bottom-right a { color: #0f0; text-decoration: none; }
-#bottom-right a:hover { text-decoration: underline; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: monospace;
+    background: #111;
+    color: #0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden;
+  }
+  /* Box initiale plus petite */
+  .initial-container {
+    background: #000;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    width: 350px; /* largeur initiale */
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 0 20px #0f0;
+  }
+  /* Box pour erreurs */
+  .container {
+    width: 450px; /* largeur pour erreurs */
+  }
+  input, button {
+    font-family: monospace;
+    margin-bottom: 10px;
+    padding: 8px;
+    width: 100%;
+    display: block;
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    border-radius: 5px;
+  }
+  input {
+    border: 1px solid #0f0;
+    background: #111;
+    color: #0f0;
+  }
+  button {
+    cursor: pointer;
+    background: #e63946;
+    color: white;
+    border: none; /* plus de contour vert */
+  }
+  .progress-bar {
+    margin-top: 15px;
+    width: 100%;
+    height: 10px;
+    background: #222;
+    border-radius: 5px;
+    overflow: hidden;
+    display: none;
+  }
+  .progress {
+    height: 100%;
+    width: 0%;
+    background: #e63946;
+    transition: width 0.1s linear;
+  }
+  .result {
+    margin-top: 20px;
+    text-align: left;
+    font-size: 14px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  .popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #e63946;
+    color: #fff;
+    padding: 30px 60px;
+    font-size: 28px;
+    font-weight: bold;
+    border-radius: 10px;
+    display: none;
+    z-index: 999; /* au-dessus des erreurs */
+    box-shadow: 0 0 30px #fff;
+    text-align: center;
+    pointer-events: none; /* ne bloque pas scroll */
+  }
+  #audio-toggle {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    font-size: 24px;
+    color: #0f0;
+    cursor: pointer;
+    user-select: none;
+    z-index: 1000;
+  }
+  #clock {
+    position: fixed;
+    top: 10px;
+    right: 15px;
+    font-size: 16px;
+    color: #0f0;
+  }
+  #bottom-left, #bottom-right {
+    position: fixed;
+    bottom: 10px;
+    font-size: 14px;
+    color: #0f0;
+  }
+  #bottom-left { left: 15px; }
+  #bottom-right { right: 15px; }
+  #bottom-right a { color: #0f0; text-decoration: none; }
+  #bottom-right a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -141,6 +127,7 @@ button {
 <div id="bottom-left">v1.1.0</div>
 <div id="bottom-right"><a href="https://discord.gg/PwjE47CA6t" target="_blank">We Want To Count</a></div>
 
+<!-- box initiale plus petite -->
 <div class="container initial-container" id="container">
   <h1>Generate Random Numbers</h1>
   <input type="number" id="from" placeholder="From">
@@ -155,80 +142,65 @@ button {
 <div class="popup" id="popup">⚠️ WARNING 451 Critical errors detected !</div>
 
 <script>
-/* --- Audio --- */
 const bgMusic = document.getElementById("bg-music");
 const audioToggle = document.getElementById("audio-toggle");
-function startMusic() {
-  if (bgMusic.paused) { bgMusic.play().catch(err => console.log("Autoplay bloqué:", err)); }
-}
-audioToggle.addEventListener("click", () => {
-  bgMusic.muted = !bgMusic.muted;
-  audioToggle.textContent = bgMusic.muted ? "🔇" : "🔊";
-});
+function startMusic() { if(bgMusic.paused) bgMusic.play().catch(err=>console.log(err)); }
+audioToggle.addEventListener("click",()=>{ bgMusic.muted=!bgMusic.muted; audioToggle.textContent=bgMusic.muted?"🔇":"🔊"; });
 
-/* --- Horloge --- */
-function updateClock() {
-  const now = new Date();
-  const dateStr = now.toLocaleDateString();
-  const timeStr = now.toLocaleTimeString();
-  document.getElementById("clock").textContent = dateStr + " " + timeStr;
+function updateClock(){
+  const now=new Date();
+  const dateStr=now.toLocaleDateString();
+  const timeStr=now.toLocaleTimeString();
+  const el=document.getElementById("clock");
+  if(el) el.textContent=dateStr+" "+timeStr;
 }
-setInterval(updateClock, 1000);
+setInterval(updateClock,1000);
 updateClock();
 
-/* --- Variables globales --- */
-let finalNumber = null;
+let finalNumber=null;
 
-/* --- Génération --- */
-function fakeGenerate() {
+function fakeGenerate(){
   startMusic();
-  const container = document.getElementById("container");
-  const resultElement = document.getElementById("result");
-  const progressBar = document.querySelector(".progress-bar");
-  const progress = document.getElementById("progress");
+  const resultElement=document.getElementById("result");
+  const progressBar=document.querySelector(".progress-bar");
+  const progress=document.getElementById("progress");
+  const fromVal=parseInt(document.getElementById("from").value);
+  const toVal=parseInt(document.getElementById("to").value);
 
-  const fromVal = parseInt(document.getElementById("from").value);
-  const toVal   = parseInt(document.getElementById("to").value);
-  if(!isNaN(fromVal) && !isNaN(toVal) && fromVal < toVal){
-    finalNumber = Math.floor(Math.random() * (toVal - fromVal + 1)) + fromVal;
-  } else { finalNumber = null; }
+  finalNumber = (!isNaN(fromVal)&&!isNaN(toVal)&&fromVal<toVal)
+    ? Math.floor(Math.random()*(toVal-fromVal+1))+fromVal
+    : null;
 
-  resultElement.innerHTML = "";
-  progressBar.style.display = "block";
-  progress.style.width = "0%";
+  resultElement.innerHTML="";
+  progressBar.style.display="block";
+  progress.style.width="0%";
 
-  let dots = "";
-  const dotInterval = setInterval(() => {
-    dots = dots.length < 3 ? dots + "." : "";
-    const cpuUsage = Math.floor(Math.random() * (85 - 79 + 1)) + 79;
-    resultElement.innerHTML = `Processing${dots} (using ${cpuUsage}% of CPU)`;
-  }, 500);
+  let dots="";
+  const dotInterval=setInterval(()=>{
+    dots=dots.length<3?dots+".":"";
+    const cpuUsage=Math.floor(Math.random()*(85-79+1))+79;
+    resultElement.innerHTML=`Processing${dots} (using ${cpuUsage}% of CPU)`;
+  },500);
 
-  let tick = 0;
-  const totalTicks = 40; // 4 s / 0.1s
-  const increment = 100 / totalTicks;
-  const barInterval = setInterval(() => {
-    if (tick >= totalTicks) {
-      clearInterval(barInterval);
-      clearInterval(dotInterval);
-      startErrorScroll();
-    } else {
-      progress.style.width = (increment * ++tick) + "%";
-    }
-  }, 100);
+  let tick=0;
+  const totalTicks=40;
+  const increment=100/totalTicks;
+  const barInterval=setInterval(()=>{
+    if(tick>=totalTicks){ clearInterval(barInterval); clearInterval(dotInterval); startErrorScroll(); }
+    else progress.style.width=(increment*++tick)+"%";
+  },100);
 }
 
-/* --- Défilement d'erreurs --- */
-function startErrorScroll() {
-  const container = document.getElementById("container");
-  const resultElement = document.getElementById("result");
-  const popup = document.getElementById("popup");
+function startErrorScroll(){
+  const container=document.getElementById("container");
+  const resultElement=document.getElementById("result");
+  const popup=document.getElementById("popup");
 
-  // Masque champs et agrandit la box
-  container.querySelectorAll('input, button, h1').forEach(el => el.style.display = 'none');
-  container.style.width = "450px"; // largeur pour erreurs
+  // cacher les champs et agrandir la box pour erreurs
+  container.querySelectorAll('input, button, h1').forEach(el=>el.style.display='none');
+  container.style.width="450px"; // largeur pour erreurs
 
-  const errorTemplates = [
+  const errorTemplates=[
     "Error: Failed to allocate memory at 0x0042FFAA",
     "Warning: Unknown HTML tag detected",
     "Fatal: Stack overflow in process #22",
@@ -245,40 +217,38 @@ function startErrorScroll() {
     "Error: SyntaxError in line 42"
   ];
 
-  const PRE_POPUP_MS = 4000;
-  const TOTAL_SCROLL_MS = 8000;
-  const LINES = 400;
-  const errors = Array.from({length: LINES}, () =>
-     errorTemplates[Math.floor(Math.random()*errorTemplates.length)]
-  );
+  const PRE_POPUP_MS=4000, TOTAL_SCROLL_MS=8000, LINES=400;
+  const errors=Array.from({length:LINES},()=>errorTemplates[Math.floor(Math.random()*errorTemplates.length)]);
+  let index=0;
+  const intervalTime=TOTAL_SCROLL_MS/LINES;
 
-  let index = 0;
-  const intervalTime = TOTAL_SCROLL_MS / LINES;
+  setTimeout(()=>{ popup.style.display="block"; },PRE_POPUP_MS);
 
-  setTimeout(() => { popup.style.display = "block"; }, PRE_POPUP_MS);
-
-  const scrollInterval = setInterval(() => {
-    if (index < errors.length) {
-      resultElement.innerHTML += errors[index] + "<br>";
-      resultElement.scrollTop = resultElement.scrollHeight;
+  const scrollInterval=setInterval(()=>{
+    if(index<errors.length){
+      resultElement.innerHTML+=errors[index]+"<br>";
+      resultElement.scrollTop=resultElement.scrollHeight;
       index++;
-    } else {
-      clearInterval(scrollInterval);
-      show404();
-    }
+    } else { clearInterval(scrollInterval); show404(); }
   }, intervalTime);
 }
 
-/* --- Page 404 finale --- */
 function show404(){
-  document.body.innerHTML = `
+  document.body.innerHTML=`
     <div id="error-screen" style="color:#f00; text-align:center; font-family:monospace;">
       <h1 id="error-text" style="cursor:pointer;">404 Not Found</h1>
       <p id="click-text" style="cursor:pointer;">The page you are looking for does not exist.</p>
     </div>
   `;
-  document.body.style.background = "#000";
+  document.body.style.background="#000";
 
-  // Cliquer H1 -> nombre généré ou ERROR
-  document.getElementById("error-text").addEventListener("click", () => {
-    const el
+  document.getElementById("error-text").addEventListener("click",()=>{
+    document.getElementById("error-text").textContent=(finalNumber!==null)?String(finalNumber):"ERROR";
+  });
+  document.getElementById("click-text").addEventListener("click",()=>{
+    document.getElementById("click-text").textContent="Hello World";
+  });
+}
+</script>
+</body>
+</html>
