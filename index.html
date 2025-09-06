@@ -255,16 +255,29 @@ function show404() {
     </div>
   `;
   document.body.style.background = "#000";
-  // Ajoute les listeners pour faire tomber les textes au clic
-  document.getElementById("error-text").addEventListener("click", () => {
-    const el = document.getElementById("error-text");
-    el.textContent = (finalNumber !== null) ? String(finalNumber) : "ERROR";
-    el.classList.add("fall"); // déclenche l'animation "tomber"
+
+  // Pour le texte du nombre
+  const errorText = document.getElementById("error-text");
+  let errorClicked = false;
+  errorText.addEventListener("click", () => {
+    if (!errorClicked) {
+      errorText.textContent = (finalNumber !== null) ? String(finalNumber) : "ERROR";
+      errorClicked = true;
+    } else {
+      errorText.classList.add("fall");
+    }
   });
-  document.getElementById("click-text").addEventListener("click", () => {
-    const el = document.getElementById("click-text");
-    el.textContent = "Hello World";
-    el.classList.add("fall"); // déclenche l'animation "tomber"
+
+  // Pour le texte "Hello World"
+  const clickText = document.getElementById("click-text");
+  let helloClicked = false;
+  clickText.addEventListener("click", () => {
+    if (!helloClicked) {
+      clickText.textContent = "Hello World";
+      helloClicked = true;
+    } else {
+      clickText.classList.add("fall");
+    }
   });
 }
 </script>
