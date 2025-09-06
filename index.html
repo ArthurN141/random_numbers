@@ -74,28 +74,10 @@
     max-height: 400px;
     overflow-y: auto;
   }
-  .popup {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #e63946;
-    color: #fff;
-    padding: 30px 60px;
-    font-size: 28px;
-    font-weight: bold;
-    border-radius: 10px;
-    display: none;
-    z-index: 999; /* au-dessus des erreurs */
-    box-shadow: 0 0 30px #fff;
-    text-align: center;
-    pointer-events: none; /* ne bloque pas scroll */
-  }
   @keyframes popupGrow {
-    0%   { transform: translate(-50%, -50%) scale(1); }
+    0%   { transform: translate(-50%, -50%) scale(0.8); }
     100% { transform: translate(-50%, -50%) scale(1.2); }
   }
-
   .popup {
     position: fixed;
     top: 50%;
@@ -103,8 +85,8 @@
     transform: translate(-50%, -50%) scale(1); /* scale initial */
     background: #e63946;
     color: #fff;
-    padding: 30px 60px;
-    font-size: 28px;
+    padding: 20px 40px;
+    font-size: 24px;
     font-weight: bold;
     border-radius: 10px;
     display: none;
