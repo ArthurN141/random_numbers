@@ -251,8 +251,8 @@ function show404() {
   // Crée les éléments finaux
   document.body.innerHTML = `
     <div id="error-screen" style="color:#f00; text-align:center; font-family:monospace;">
-      <h1 id="error-text" style="cursor:pointer;">404 Not Found</h1>
-      <p id="click-text" style="cursor:pointer;">The page you are looking for does not exist;</p>
+      <h1 id="error-text" style="cursor:pointer; display:inline-block; position:relative;">404 Not Found</h1>
+      <p id="click-text" style="cursor:pointer; display:inline-block; position:relative;">The page you are looking for does not exist;</p>
     </div>
   `;
   document.body.style.background = "#000";
@@ -272,8 +272,12 @@ function show404() {
       errorEl.dataset.clicked = 1;
     } else if (parseInt(errorEl.dataset.clicked) === 1) {
       // deuxième clic : fait tomber le texte
-      errorEl.classList.add("fall");
       errorEl.dataset.clicked = 2;
+      errorEl.classList.add("fall");
+      // si le texte du bas est déjà affiché mais pas encore en zoom, démarrer zoom
+      if (parseInt(clickEl.dataset.step) > 0 && !clickZoomInterval) {
+        startClickZoom();
+      }
     }
   });
 
@@ -289,43 +293,38 @@ function show404() {
   clickEl.dataset.scale = 1;
   let clickZoomInterval = null;
 
+  function startClickZoom() {
+    // capture la position actuelle
+    const rect = clickEl.getBoundingClientRect();
+    clickEl.style.position = "absolute";
+    clickEl.style.left = `${rect.left + rect.width / 2}px`;
+    clickEl.style.top = `${rect.top + rect.height / 2}px`;
+    clickEl.style.transform = `translate(-50%, -50%) scale(${clickEl.dataset.scale})`;
+    clickZoomInterval = setInterval(() => {
+      let scale = parseFloat(clickEl.dataset.scale) + 0.01;
+      clickEl.dataset.scale = scale;
+      clickEl.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    }, 50);
+  }
+
   clickEl.addEventListener("click", () => {
     const errorFallen = parseInt(errorEl.dataset.clicked) === 2;
-
-    if (!errorFallen) {
-      // si le nombre/ERROR n'est pas encore tombé, on avance juste dans les étapes
-      let step = parseInt(clickEl.dataset.step);
-      if (step < helloSteps.length) {
-        clickEl.textContent = helloSteps[step];
-        clickEl.dataset.step = step + 1;
-      } else {
-        clickEl.classList.add("fall");
-      }
-      return;
-    }
-
-    // si le nombre/ERROR est tombé : zoom continu
-    if (!clickZoomInterval) {
-      clickZoomInterval = setInterval(() => {
-        let scale = parseFloat(clickEl.dataset.scale) + 0.01;
-        clickEl.dataset.scale = scale;
-        clickEl.style.transform = `translate(-50%, -50%) scale(${scale})`;
-      }, 50);
-    }
-
-    // avancer dans les étapes
     let step = parseInt(clickEl.dataset.step);
+
     if (step < helloSteps.length) {
       clickEl.textContent = helloSteps[step];
       clickEl.dataset.step = step + 1;
+      // si le texte du haut est déjà tombé et zoom pas encore lancé
+      if (errorFallen && !clickZoomInterval) {
+        startClickZoom();
+      }
     } else {
-      // dernière étape : tombe
+      // dernière étape : tombe avec sa taille actuelle
       clickEl.classList.add("fall");
-      clearInterval(clickZoomInterval);
+      if (clickZoomInterval) clearInterval(clickZoomInterval);
     }
   });
 }
-
 
 </script>
 </body>
