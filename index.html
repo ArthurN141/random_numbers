@@ -252,7 +252,9 @@ function show404() {
   document.body.innerHTML = `
     <div id="error-screen" style="color:#f00; text-align:center; font-family:monospace;">
       <h1 id="error-text" style="cursor:pointer;">404 Not Found</h1>
-      <p id="click-text" style="cursor:pointer; display:inline-block; position:relative;">The page you are looking for does not exist;</p>
+      <p id="click-text" style="cursor:pointer; display:inline-block; position:relative;">
+        <span id="click-inner">The page you are looking for does not exist;</span>
+      </p>
     </div>
   `;
   document.body.style.background = "#000";
@@ -262,10 +264,36 @@ function show404() {
 
   // Texte "404 Not Found"
   const errorEl = document.getElementById("error-text");
-  errorEl.dataset.clicked = 0;  // 0 = pas encore cliqué, 1 = affiché, 2 = tombé
+  errorEl.dataset.clicked = 0;
 
+  // Texte "Hello World"
+  const clickEl = document.getElementById("click-text");
+  const clickInner = document.getElementById("click-inner");
+
+  const helloSteps = [
+    "Hello World",
+    'print("Hello World")',
+    'HelloWorld("print")',
+    '(hell_oworld)"print"'
+  ];
+
+  clickEl.dataset.step = 0;
+  clickInner.dataset.scale = 1;
+  let clickZoomInterval = null;
+
+  function startClickZoom() {
+    if (clickZoomInterval) return; // éviter plusieurs zooms
+    clickZoomInterval = setInterval(() => {
+      let scale = parseFloat(clickInner.dataset.scale) + 0.01;
+      clickInner.dataset.scale = scale;
+      clickInner.style.transform = `scale(${scale})`;
+    }, 50);
+  }
+
+  // --- Clic sur 404 ---
   errorEl.addEventListener("click", () => {
     if (strangerMusic.paused) strangerMusic.play();
+
     if (parseInt(errorEl.dataset.clicked) === 0) {
       // premier clic : affiche le nombre ou ERROR
       errorEl.textContent = (finalNumber !== null) ? String(finalNumber) : "ERROR";
@@ -275,36 +303,14 @@ function show404() {
       errorEl.dataset.clicked = 2;
       errorEl.classList.add("fall");
 
-      // si le texte du bas est déjà affiché et pas encore en zoom, démarrer zoom
-      if (parseInt(clickEl.dataset.step) > 0 && !clickZoomInterval) {
+      // si le bas est déjà en "Hello World" (ou plus), on démarre le zoom
+      if (parseInt(clickEl.dataset.step) > 0) {
         startClickZoom();
       }
     }
   });
 
-  // Texte "Hello World" avec wrapper pour le zoom
-  const clickEl = document.getElementById("click-text");
-  clickEl.innerHTML = `<span id="click-inner">${clickEl.textContent}</span>`;
-  const clickInner = document.getElementById("click-inner");
-
-  const helloSteps = [
-    "Hello World",
-    'print("Hello World")',
-    'HelloWorld("print")',
-    '(hell_oworld)"print"'
-  ];
-  clickEl.dataset.step = 0;
-  clickInner.dataset.scale = 1;
-  let clickZoomInterval = null;
-
-  function startClickZoom() {
-    clickZoomInterval = setInterval(() => {
-      let scale = parseFloat(clickInner.dataset.scale) + 0.01;
-      clickInner.dataset.scale = scale;
-      clickInner.style.transform = `scale(${scale})`;
-    }, 50);
-  }
-
+  // --- Clic sur le bas ---
   clickEl.addEventListener("click", () => {
     const errorFallen = parseInt(errorEl.dataset.clicked) === 2;
     let step = parseInt(clickEl.dataset.step);
@@ -313,15 +319,13 @@ function show404() {
       clickInner.textContent = helloSteps[step];
       clickEl.dataset.step = step + 1;
 
-      // démarrer zoom automatiquement si le texte du haut est tombé
-      if (errorFallen && !clickZoomInterval) {
+      // si le 404 est déjà tombé → démarrer le zoom direct
+      if (errorFallen) {
         startClickZoom();
       }
     } else {
-      // stoppe le zoom
+      // dernière étape : stoppe le zoom et fait tomber le texte
       if (clickZoomInterval) clearInterval(clickZoomInterval);
-
-      // applique la chute sur le parent <p>, le zoom reste sur le span interne
       clickEl.classList.add("fall");
     }
   });
