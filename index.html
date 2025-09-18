@@ -262,14 +262,16 @@ function show404() {
 
   // Texte "404 Not Found"
   const errorEl = document.getElementById("error-text");
-  errorEl.dataset.clicked = 0;
+  errorEl.dataset.clicked = 0;  // 0 = pas encore cliqué, 1 = affiché, 2 = tombé
 
   errorEl.addEventListener("click", () => {
     if (strangerMusic.paused) strangerMusic.play();
     if (parseInt(errorEl.dataset.clicked) === 0) {
+      // premier clic : affiche le nombre ou ERROR
       errorEl.textContent = (finalNumber !== null) ? String(finalNumber) : "ERROR";
       errorEl.dataset.clicked = 1;
     } else if (parseInt(errorEl.dataset.clicked) === 1) {
+      // deuxième clic : fait tomber le texte
       errorEl.dataset.clicked = 2;
       errorEl.classList.add("fall");
 
@@ -280,7 +282,7 @@ function show404() {
     }
   });
 
-  // Texte "Hello World" avec span pour zoom
+  // Texte "Hello World" avec wrapper pour le zoom
   const clickEl = document.getElementById("click-text");
   clickEl.innerHTML = `<span id="click-inner">${clickEl.textContent}</span>`;
   const clickInner = document.getElementById("click-inner");
@@ -316,11 +318,11 @@ function show404() {
         startClickZoom();
       }
     } else {
-      // démarre la chute, le zoom continue pendant la chute
-      clickEl.classList.add("fall");
+      // stoppe le zoom
+      if (clickZoomInterval) clearInterval(clickZoomInterval);
 
-      // si le zoom n'était pas encore actif, le lancer
-      if (!clickZoomInterval) startClickZoom();
+      // applique la chute sur le parent <p>, le zoom reste sur le span interne
+      clickEl.classList.add("fall");
     }
   });
 }
