@@ -300,26 +300,34 @@ function show404() {
       clickEl.style.transform = `scale(${scale})`;
     }, 50);
   }
+errorEl.addEventListener("click", () => {
+  if (strangerMusic.paused) strangerMusic.play();
 
-  clickEl.addEventListener("click", () => {
-    const errorFallen = parseInt(errorEl.dataset.clicked) === 2;
-    let step = parseInt(clickEl.dataset.step);
+  if (parseInt(errorEl.dataset.clicked) === 0) {
+    errorEl.textContent = (finalNumber !== null) ? String(finalNumber) : "ERROR";
+    errorEl.dataset.clicked = 1;
 
-    if (step < helloSteps.length) {
-      clickEl.textContent = helloSteps[step];
-      clickEl.dataset.step = step + 1;
+  } else if (parseInt(errorEl.dataset.clicked) === 1) {
+    errorEl.dataset.clicked = 2;
+    errorEl.classList.add("fall");
 
-      // démarrer zoom automatiquement si le texte du haut est tombé
-      if (errorFallen && !clickZoomInterval) {
-        startClickZoom();
-      }
-    } else {
-      // dernière étape : tombe en conservant la taille actuelle
-      clickEl.classList.add("fall");
-      if (clickZoomInterval) clearInterval(clickZoomInterval);
+    // si le texte du bas est déjà affiché et pas encore en zoom, démarrer zoom
+    if (parseInt(clickEl.dataset.step) > 0 && !clickZoomInterval) {
+      startClickZoom();
     }
-  });
-}
+
+    // --- APPEL DU JEU 2s après la chute et après que la musique s'arrête ---
+    strangerMusic.addEventListener("ended", () => {
+      setTimeout(() => { startMarioGame(); }, 2000);
+    });
+
+    // si la musique est en lecture, on attend sa fin
+    if (strangerMusic.paused) {
+      setTimeout(() => { startMarioGame(); }, 2000);
+    }
+  }
+});
+
 function startMarioGame() {
   document.body.innerHTML = ""; // Nettoie la page
 
