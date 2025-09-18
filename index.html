@@ -23,7 +23,7 @@
     padding: 30px;
     border-radius: 10px;
     text-align: center;
-    width: 500px; /* largeur initiale */
+    width: 500px; /* I know you are stalking my code since its public 👀👀👀👀👀 */
     max-height: 90vh;
     overflow: hidden;
     box-shadow: 0 0 20px #0f0;
@@ -246,6 +246,7 @@ function startErrorScroll(){
     } else { clearInterval(scrollInterval); show404(); }
   }, intervalTime);
 }
+
 function show404() {
   // Crée les éléments finaux
   document.body.innerHTML = `
@@ -256,27 +257,34 @@ function show404() {
   `;
   document.body.style.background = "#000";
 
-  // Pour le texte du nombre
-  const errorText = document.getElementById("error-text");
-  let errorClicked = false;
-  errorText.addEventListener("click", () => {
-    if (!errorClicked) {
-      errorText.textContent = (finalNumber !== null) ? String(finalNumber) : "ERROR";
-      errorClicked = true;
-    } else {
-      errorText.classList.add("fall");
-    }
+  // --- Musique pour 404 ---
+  const strangerMusic = new Audio("stranger_things.m4a");
+
+  // Texte "404 Not Found"
+  const errorEl = document.getElementById("error-text");
+  errorEl.dataset.clicked = 0; // compteur d'étapes (pour info si besoin)
+  errorEl.addEventListener("click", () => {
+    if(strangerMusic.paused) strangerMusic.play(); // joue musique au premier clic
+    errorEl.textContent = (finalNumber !== null) ? String(finalNumber) : "ERROR";
+    errorEl.classList.add("fall");
   });
 
-  // Pour le texte "Hello World"
-  const clickText = document.getElementById("click-text");
-  let helloClicked = false;
-  clickText.addEventListener("click", () => {
-    if (!helloClicked) {
-      clickText.textContent = "Hello World";
-      helloClicked = true;
+  // Texte "Hello World"
+  const clickEl = document.getElementById("click-text");
+  const helloSteps = [
+    "Hello World",
+    'print("Hello World")',
+    'HelloWorld("print")',
+    '("hell_oworld")print""'
+  ];
+  clickEl.dataset.step = 0;
+  clickEl.addEventListener("click", () => {
+    let step = parseInt(clickEl.dataset.step);
+    if(step < helloSteps.length) {
+      clickEl.textContent = helloSteps[step];
+      clickEl.dataset.step = step + 1;
     } else {
-      clickText.classList.add("fall");
+      clickEl.classList.add("fall"); // dernière étape, fait tomber le texte
     }
   });
 }
