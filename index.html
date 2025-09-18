@@ -301,7 +301,7 @@ function show404() {
     }, 50);
   }
 
-clickEl.addEventListener("click", () => {
+  clickEl.addEventListener("click", () => {
     const errorFallen = parseInt(errorEl.dataset.clicked) === 2;
     let step = parseInt(clickEl.dataset.step);
 
@@ -317,13 +317,9 @@ clickEl.addEventListener("click", () => {
       // dernière étape : tombe en conservant la taille actuelle
       clickEl.classList.add("fall");
       if (clickZoomInterval) clearInterval(clickZoomInterval);
-
-      // =====> Ici, on déclenche le jeu Mario après 2 secondes
-      setTimeout(() => {
-        startMarioGame();
-      }, 2000);
     }
-});
+  });
+}
 function startMarioGame() {
   document.body.innerHTML = ""; // Nettoie la page
 
