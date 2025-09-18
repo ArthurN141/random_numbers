@@ -282,15 +282,14 @@ function show404() {
     }, 50);
   }
 
+  // On attend que toutes les animations soient terminées
   let animationsEnded = { error: false, click: false };
-
   function tryStartGame() {
     if (animationsEnded.error && animationsEnded.click) {
       startMarioGame();
     }
   }
 
-  // Quand le texte tombe
   errorEl.addEventListener('click', () => {
     if (parseInt(errorEl.dataset.clicked) === 0) {
       errorEl.textContent = (finalNumber !== null) ? String(finalNumber) : "ERROR";
@@ -298,6 +297,7 @@ function show404() {
     } else if (parseInt(errorEl.dataset.clicked) === 1) {
       errorEl.dataset.clicked = 2;
       errorEl.classList.add("fall");
+
       if (parseInt(clickEl.dataset.step) > 0 && !clickZoomInterval) startClickZoom();
 
       errorEl.addEventListener('animationend', () => {
@@ -307,7 +307,6 @@ function show404() {
     }
   });
 
-  // Quand on clique sur le clickEl
   clickEl.addEventListener('click', () => {
     let step = parseInt(clickEl.dataset.step);
     if (step < helloSteps.length) {
@@ -374,7 +373,8 @@ function startMarioGame() {
     if (!gameStarted) {
       gameStarted = true;
       startTime = performance.now();
-      music.play().catch(()=>{}); // déclenché depuis un clic ou espace
+      music.currentTime = 0;
+      music.play().catch(()=>{}); // déclenché depuis clic/espace
       gameLoop();
     }
   }
@@ -383,11 +383,6 @@ function startMarioGame() {
     if (e.code === "Space") { startGame(); jump(); }
   });
   canvas.addEventListener("click", () => { startGame(); jump(); });
-
-  function gameLoop() {
-    // ... boucle de jeu identique
-  }
-}
 
   function gameLoop() {
     ctx.fillStyle = "#fff";
@@ -426,7 +421,7 @@ function startMarioGame() {
         obstacleSpeed = 5;
         startTime = performance.now();
         music.currentTime = 0;
-        music.play(); // Relancer la musique après chaque mort
+        music.play();
       }
 
       if (ob.x + ob.w < 0) {
