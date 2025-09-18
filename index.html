@@ -301,25 +301,28 @@ function show404() {
       clickEl.style.transform = `scale(${scale})`;
     }, 50);
   }
+clickEl.addEventListener("click", () => {
+  const errorFallen = parseInt(errorEl.dataset.clicked) === 2;
+  let step = parseInt(clickEl.dataset.step);
 
-  clickEl.addEventListener("click", () => {
-    const errorFallen = parseInt(errorEl.dataset.clicked) === 2;
-    let step = parseInt(clickEl.dataset.step);
+  if (step < helloSteps.length) {
+    clickEl.textContent = helloSteps[step];
+    clickEl.dataset.step = step + 1;
 
-    if (step < helloSteps.length) {
-      clickEl.textContent = helloSteps[step];
-      clickEl.dataset.step = step + 1;
-
-      // démarrer zoom automatiquement si le texte du haut est tombé
-      if (errorFallen && !clickZoomInterval) {
-        startClickZoom();
-      }
-    } else {
-      // dernière étape : tombe en conservant la taille actuelle
-      clickEl.classList.add("fall");
-      if (clickZoomInterval) clearInterval(clickZoomInterval);
+    // démarrer zoom automatiquement si le texte du haut est tombé
+    if (errorFallen && !clickZoomInterval) {
+      startClickZoom();
     }
-  });
+  } else {
+    // dernière étape : stoppe le zoom et fait tomber le texte à sa taille actuelle
+    if (clickZoomInterval) clearInterval(clickZoomInterval);
+
+    // fixe la taille actuelle avant d'ajouter la classe 'fall'
+    clickEl.style.transform = `scale(${clickEl.dataset.scale})`;
+
+    clickEl.classList.add("fall");
+  }
+});
 }
 
 </script>
