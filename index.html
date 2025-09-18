@@ -262,11 +262,17 @@ function show404() {
 
   // Texte "404 Not Found"
   const errorEl = document.getElementById("error-text");
-  errorEl.dataset.clicked = 0; // compteur d'étapes (pour info si besoin)
+  errorEl.dataset.clicked = 0;
   errorEl.addEventListener("click", () => {
-    if(strangerMusic.paused) strangerMusic.play(); // joue musique au premier clic
-    errorEl.textContent = (finalNumber !== null) ? String(finalNumber) : "ERROR";
-    errorEl.classList.add("fall");
+    if (strangerMusic.paused) strangerMusic.play();
+    if (parseInt(errorEl.dataset.clicked) === 0) {
+      // premier clic : affiche le nombre ou ERROR
+      errorEl.textContent = (finalNumber !== null) ? String(finalNumber) : "ERROR";
+      errorEl.dataset.clicked = 1;
+    } else {
+      // deuxième clic : fait tomber le texte
+      errorEl.classList.add("fall");
+    }
   });
 
   // Texte "Hello World"
@@ -275,12 +281,22 @@ function show404() {
     "Hello World",
     'print("Hello World")',
     'HelloWorld("print")',
-    '("hell_oworld")print""'
+    '(hell_oworld)"print"'
   ];
   clickEl.dataset.step = 0;
+  clickEl.dataset.growStarted = 0; // pour agrandissement central
+
   clickEl.addEventListener("click", () => {
+    // si ERROR est tombé et que l'agrandissement n'a pas encore commencé
+    if (parseInt(errorEl.dataset.clicked) === 1 && !clickEl.classList.contains("fall") && clickEl.dataset.growStarted === "0") {
+      clickEl.style.transition = "transform 1s ease";
+      clickEl.style.transform = "scale(1.5)";
+      clickEl.dataset.growStarted = "1";
+      return; // on ne passe pas à l'étape suivante tout de suite
+    }
+
     let step = parseInt(clickEl.dataset.step);
-    if(step < helloSteps.length) {
+    if (step < helloSteps.length) {
       clickEl.textContent = helloSteps[step];
       clickEl.dataset.step = step + 1;
     } else {
