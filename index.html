@@ -262,9 +262,7 @@ function show404() {
 
   // Texte "404 Not Found"
   const errorEl = document.getElementById("error-text");
-  errorEl.dataset.clicked = 0;
-  errorEl.dataset.scale = 1;
-  let errorZoomInterval = null;
+  errorEl.dataset.clicked = 0;  // 0 = pas encore cliqué, 1 = affiché, 2 = tombé
 
   errorEl.addEventListener("click", () => {
     if (strangerMusic.paused) strangerMusic.play();
@@ -272,20 +270,10 @@ function show404() {
       // premier clic : affiche le nombre ou ERROR
       errorEl.textContent = (finalNumber !== null) ? String(finalNumber) : "ERROR";
       errorEl.dataset.clicked = 1;
-
-      // démarrer zoom continu
-      if (!errorZoomInterval) {
-        errorZoomInterval = setInterval(() => {
-          let scale = parseFloat(errorEl.dataset.scale) + 0.01;
-          errorEl.dataset.scale = scale;
-          errorEl.style.transform = `translate(-50%, -50%) scale(${scale})`;
-        }, 50); // toutes les 50ms
-      }
-
-    } else {
+    } else if (parseInt(errorEl.dataset.clicked) === 1) {
       // deuxième clic : fait tomber le texte
       errorEl.classList.add("fall");
-      clearInterval(errorZoomInterval);
+      errorEl.dataset.clicked = 2;
     }
   });
 
@@ -302,21 +290,34 @@ function show404() {
   let clickZoomInterval = null;
 
   clickEl.addEventListener("click", () => {
-    let step = parseInt(clickEl.dataset.step);
+    const errorFallen = parseInt(errorEl.dataset.clicked) === 2;
 
+    if (!errorFallen) {
+      // si le nombre/ERROR n'est pas encore tombé, on avance juste dans les étapes
+      let step = parseInt(clickEl.dataset.step);
+      if (step < helloSteps.length) {
+        clickEl.textContent = helloSteps[step];
+        clickEl.dataset.step = step + 1;
+      } else {
+        clickEl.classList.add("fall");
+      }
+      return;
+    }
+
+    // si le nombre/ERROR est tombé : zoom continu
+    if (!clickZoomInterval) {
+      clickZoomInterval = setInterval(() => {
+        let scale = parseFloat(clickEl.dataset.scale) + 0.01;
+        clickEl.dataset.scale = scale;
+        clickEl.style.transform = `translate(-50%, -50%) scale(${scale})`;
+      }, 50);
+    }
+
+    // avancer dans les étapes
+    let step = parseInt(clickEl.dataset.step);
     if (step < helloSteps.length) {
       clickEl.textContent = helloSteps[step];
       clickEl.dataset.step = step + 1;
-
-      // démarrer zoom continu si pas déjà
-      if (!clickZoomInterval) {
-        clickZoomInterval = setInterval(() => {
-          let scale = parseFloat(clickEl.dataset.scale) + 0.01;
-          clickEl.dataset.scale = scale;
-          clickEl.style.transform = `translate(-50%, -50%) scale(${scale})`;
-        }, 50);
-      }
-
     } else {
       // dernière étape : tombe
       clickEl.classList.add("fall");
@@ -324,6 +325,7 @@ function show404() {
     }
   });
 }
+
 
 </script>
 </body>
