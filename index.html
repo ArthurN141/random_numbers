@@ -321,7 +321,7 @@ clickEl.addEventListener("click", () => {
             startMarioGame(false); // false = ne pas lancer le loop automatiquement
         }, 2000);
     }
-});
+}
 function startMarioGame(autoStart = true){
     // --- Création du container de jeu au lieu de nettoyer le body ---
     const gameContainer = document.createElement("div");
@@ -443,7 +443,8 @@ function startMarioGame(autoStart = true){
 
     canvas.addEventListener("click",startGame);
     window.addEventListener("keydown",e=>{ if(e.code==="Space") startGame(); });
-}
+});
+ 
 </script>
 </body>
 </html>
