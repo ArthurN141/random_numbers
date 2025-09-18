@@ -287,7 +287,6 @@ function show404() {
   }
 
   errorEl.addEventListener("click", () => {
-    // Lancer la musique si pas déjà
     if (strangerMusic.paused) strangerMusic.play();
 
     if (parseInt(errorEl.dataset.clicked) === 0) {
@@ -301,12 +300,14 @@ function show404() {
         startClickZoom();
       }
 
-      // --- Lancement du jeu 2s après la chute ---
-      setTimeout(() => {
-        strangerMusic.pause(); // arrêter la musique 451
-        strangerMusic.currentTime = 0;
-        startMarioGame();
-      }, 2000);
+      // --- Lancement du jeu 2s après la fin de l'animation ---
+      errorEl.addEventListener('animationend', () => {
+        setTimeout(() => {
+          strangerMusic.pause();
+          strangerMusic.currentTime = 0;
+          startMarioGame();
+        }, 2000);
+      }, { once: true });
     }
   });
 
@@ -392,6 +393,7 @@ function startMarioGame() {
     marioVY += 1;
     marioY += marioVY;
     if(marioY > groundY - 50){ marioY = groundY - 50; marioVY = 0; jumping=false; }
+
     ctx.drawImage(jumping ? marioJump : marioStand, 100, marioY, 50, 50);
 
     if(frameCount % 120 === 0) {
