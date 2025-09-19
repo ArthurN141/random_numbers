@@ -316,6 +316,7 @@ function show404() {
       clickEl.addEventListener("animationend", () => {
         strangerMusic.pause();
         strangerMusic.currentTime = 0; // reset au début si on veut rejouer plus tard
+        window.location.href = "super_mario_game.html";
       }, { once: true });
     }
   });
