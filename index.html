@@ -256,15 +256,22 @@ function show404() {
     <div id="error-screen" style="color:#f00; text-align:center; font-family:monospace;">
       <h1 id="error-text" style="cursor:pointer;">404 Not Found</h1>
       <p id="click-text" style="cursor:pointer;">The page you are looking for does not exist;</p>
+      <button id="start-game-btn" style="display:none; margin-top:20px; font-size:20px; cursor:pointer;">START GAME</button>
     </div>
   `;
   document.body.style.background = "#000";
 
   const errorEl = document.getElementById("error-text");
   const clickEl = document.getElementById("click-text");
+  const startBtn = document.getElementById("start-game-btn");
+
+  const strangerMusic = new Audio("stranger_things.m4a");
+  strangerMusic.loop = false;
+
   errorEl.dataset.clicked = 0;
   clickEl.dataset.step = 0;
   clickEl.dataset.scale = 1;
+  let clickZoomInterval = null;
 
   const helloSteps = [
     "Hello World",
@@ -273,7 +280,6 @@ function show404() {
     '(hell_oworld)"print"'
   ];
 
-  let clickZoomInterval = null;
   function startClickZoom() {
     clickZoomInterval = setInterval(() => {
       let scale = parseFloat(clickEl.dataset.scale) + 0.01;
@@ -282,15 +288,12 @@ function show404() {
     }, 50);
   }
 
-  // On attend que toutes les animations soient terminées
-  let animationsEnded = { error: false, click: false };
-  function tryStartGame() {
-    if (animationsEnded.error && animationsEnded.click) {
-      startMarioGame();
-    }
-  }
+  let errorFallen = false; // savoir si le texte du haut est tombé
 
-  errorEl.addEventListener('click', () => {
+  // Clique sur le texte du haut
+  errorEl.addEventListener("click", () => {
+    if (strangerMusic.paused) strangerMusic.play(); // lancer Stranger Things
+
     if (parseInt(errorEl.dataset.clicked) === 0) {
       errorEl.textContent = (finalNumber !== null) ? String(finalNumber) : "ERROR";
       errorEl.dataset.clicked = 1;
@@ -298,30 +301,38 @@ function show404() {
       errorEl.dataset.clicked = 2;
       errorEl.classList.add("fall");
 
-      if (parseInt(clickEl.dataset.step) > 0 && !clickZoomInterval) startClickZoom();
-
       errorEl.addEventListener('animationend', () => {
-        animationsEnded.error = true;
-        tryStartGame();
+        errorFallen = true;
+
+        // Si le texte du bas a déjà au moins Hello World, démarrer le zoom
+        if (clickEl.dataset.step > 0 && !clickZoomInterval) startClickZoom();
+
+        // Afficher le bouton Start Game
+        startBtn.style.display = "inline-block";
       }, { once: true });
     }
   });
 
-  clickEl.addEventListener('click', () => {
+  // Clique sur le texte du bas
+  clickEl.addEventListener("click", () => {
     let step = parseInt(clickEl.dataset.step);
     if (step < helloSteps.length) {
       clickEl.textContent = helloSteps[step];
       clickEl.dataset.step = step + 1;
-      if (!clickZoomInterval) startClickZoom();
+
+      // démarrer zoom seulement si errorEl est tombé et step >= 1
+      if (errorFallen && step >= 0 && !clickZoomInterval) startClickZoom();
     } else {
       clickEl.classList.add("fall");
       if (clickZoomInterval) clearInterval(clickZoomInterval);
-
-      clickEl.addEventListener('animationend', () => {
-        animationsEnded.click = true;
-        tryStartGame();
-      }, { once: true });
     }
+  });
+
+  // Bouton Start pour démarrer le jeu + musique
+  startBtn.addEventListener("click", () => {
+    strangerMusic.pause();
+    strangerMusic.currentTime = 0;
+    startMarioGame();
   });
 }
 
@@ -374,15 +385,15 @@ function startMarioGame() {
       gameStarted = true;
       startTime = performance.now();
       music.currentTime = 0;
-      music.play().catch(()=>{}); // déclenché depuis clic/espace
+      music.play().catch(()=>{}); // démarrer la musique
       gameLoop();
     }
   }
 
-  window.addEventListener("keydown", e => {
-    if (e.code === "Space") { startGame(); jump(); }
-  });
+  // clic sur canvas pour sauter
   canvas.addEventListener("click", () => { startGame(); jump(); });
+  // touche espace pour sauter
+  window.addEventListener("keydown", e => { if(e.code==="Space") { startGame(); jump(); } });
 
   function gameLoop() {
     ctx.fillStyle = "#fff";
@@ -409,7 +420,6 @@ function startMarioGame() {
       ob.x -= obstacleSpeed;
       ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
 
-      // Collision
       if (100 + 50 > ob.x && 100 < ob.x + ob.w && marioY + 50 > ob.y) {
         deathSound.play();
         music.pause();
@@ -444,6 +454,7 @@ function startMarioGame() {
     requestAnimationFrame(gameLoop);
   }
 }
+
 
 </script>
 </body>
