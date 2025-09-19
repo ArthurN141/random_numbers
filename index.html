@@ -114,7 +114,7 @@ function startMarioGame(autoStart = false) {
   function jump() { if(!jumping) { marioVY = -15; jumping = true; } }
 
   function getObstacleHeight() {
-    let maxHeight = 70;
+    let maxHeight = 65;
     let minHeight = 30;
     let highProb = Math.min(0.3 + 0.05 * Math.floor(level/2), 0.7);
     return Math.random() < highProb ? Math.floor(Math.random()*(maxHeight-50)+50)
