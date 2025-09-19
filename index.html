@@ -213,7 +213,7 @@ function startMarioGame(autoStart = false) {
 
     // === spawn star ===
     if(level >= 2 && !star && !starSpawnedThisLevel){
-      if(Math.random() < 0.8){
+      if(Math.random() < 0.14){
         let starY;
         const maxStarY = groundY - 50 - 150; // hauteur max depuis le sol
         if(obstacles.length > 0 && Math.random() < 0.5){
