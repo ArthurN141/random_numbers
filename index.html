@@ -115,24 +115,27 @@
           ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
 
           // Collision
-          if(100 + 50 > ob.x && 100 < ob.x + ob.w && marioY + 50 > ob.y) {
-            deathSound.play();
-            music.pause();
-            obstacles.length = 0;
-            marioY = groundY - 50;
-            marioVY = 0;
-            jumping = false;
-            score = 0;
-            obstacleSpeed = 5;
-            startTime = performance.now();
-            music.currentTime = 0;
-            music.play().catch(()=>{});
-          }
+        if(100 + 50 > ob.x && 100 < ob.x + ob.w && marioY + 50 > ob.y) {
+          // Collision : joue le deathSound, reset obstacles et Mario
+          deathSound.currentTime = 0;
+          deathSound.play();
 
-          if(ob.x + ob.w < 0) {
-            obstacles.splice(i,1);
-            score++;
-          }
+          // Pause et reset de la musique principale
+          music.pause();
+          music.currentTime = 0;
+
+          obstacles.length = 0;
+          marioY = groundY - 50;
+          marioVY = 0;
+          jumping = false;
+          score = 0;
+          obstacleSpeed = 5;
+          startTime = performance.now();
+
+          // Redémarrer la musique principale uniquement après la fin du deathSound
+          deathSound.onended = () => {
+            music.play().catch(()=>{});
+          };
         }
 
         // HUD
