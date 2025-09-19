@@ -63,6 +63,7 @@ function startMarioGame(autoStart = false) {
   let gameStarted = false;
   let startTime = 0;
   let lastAccelerationTime = 0; // pour accélération obstacles
+  let paused = false; // bloque le timer à la mort
   const groundY = canvas.height - 100;
 
   function jump() {
@@ -74,13 +75,14 @@ function startMarioGame(autoStart = false) {
       gameStarted = true;
       startTime = performance.now();
       lastAccelerationTime = performance.now();
+      paused = false;
       music.play().catch(()=>{});
       gameLoop();
     }
   }
 
-  canvas.addEventListener("click", () => { if(gameStarted) jump(); });
-  window.addEventListener("keydown", e => { if(e.code === "Space" && gameStarted) jump(); });
+  canvas.addEventListener("click", () => { if(gameStarted && !paused) jump(); });
+  window.addEventListener("keydown", e => { if(e.code === "Space" && gameStarted && !paused) jump(); });
 
   function gameLoop() {
     ctx.fillStyle = "#fff";
@@ -108,7 +110,8 @@ function startMarioGame(autoStart = false) {
       ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
 
       // collision
-      if (100 + 50 > ob.x && 100 < ob.x + ob.w && marioY + 50 > ob.y) {
+      if (100 + 50 > ob.x && 100 < ob.x + ob.w && marioY + 50 > ob.y && !paused) {
+        paused = true; // stoppe le timer
         deathSound.currentTime = 0;
         deathSound.play();
         music.pause();
@@ -121,8 +124,9 @@ function startMarioGame(autoStart = false) {
         score = 0;
         obstacleSpeed = 5;
 
-        // on attend la fin du deathSound pour redémarrer musique et timer
+        // redémarrage après deathSound
         deathSound.onended = () => {
+          paused = false;
           startTime = performance.now();
           lastAccelerationTime = performance.now();
           music.play().catch(()=>{});
@@ -136,7 +140,7 @@ function startMarioGame(autoStart = false) {
     }
 
     // augmentation obstacleSpeed toutes les 30 sec
-    if (gameStarted) {
+    if (!paused && gameStarted) {
       const now = performance.now();
       if (now - lastAccelerationTime >= 30000) { // 30 000 ms = 30 sec
         obstacleSpeed += 1;
@@ -150,7 +154,8 @@ function startMarioGame(autoStart = false) {
     ctx.fillText("Score: " + score, 20, 50);
 
     if(gameStarted){
-      const elapsed = (performance.now() - startTime) / 1000;
+      const elapsed = paused ? (timerEl.textContent ? parseFloat(timerEl.textContent) : 0)
+                             : (performance.now() - startTime) / 1000;
       timerEl.textContent = elapsed.toFixed(2) + " sec";
     } else {
       timerEl.textContent = "0.00 sec";
