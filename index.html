@@ -35,15 +35,16 @@ function startMarioGame(autoStart = false) {
   music.loop = true;
   const deathSound = new Audio("mario_death.m4a");
   const powerUpSound = new Audio("super_mario_power_up.m4a");
+  const invincibleSound = new Audio("invincible_super_mario.m4a");
 
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   const ctx = canvas.getContext("2d");
-  ctx.imageSmoothingEnabled = true; // améliore les formes dessinées
+  ctx.imageSmoothingEnabled = true;
 
-  // === HUD texte net ===
+  // === HUD ===
   const scoreEl = document.createElement("div");
   scoreEl.style.position = "fixed";
   scoreEl.style.top = "10px";
@@ -79,6 +80,7 @@ function startMarioGame(autoStart = false) {
   const marioStand = new Image(); marioStand.src = "super_mario.png";
   const marioJump = new Image(); marioJump.src = "super_mario_jump.png";
   const marioDeath = new Image(); marioDeath.src = "super_mario_death.png";
+  const starImg = new Image(); starImg.src = "super_star.png";
 
   let marioY = canvas.height - 150;
   let marioVY = 0;
@@ -95,8 +97,15 @@ function startMarioGame(autoStart = false) {
   const groundY = canvas.height - 100;
 
   let level = 1;
-  let nextAccelerationDelay = 15000 + Math.random() * 5000; // 15-20s
+  let nextAccelerationDelay = 15000 + Math.random() * 5000;
   let lastAccelerationTime = 0;
+
+  // === Star invincible ===
+  let star = null;
+  let invincible = false;
+  let invincibleStartTime = 0;
+  let starFloatOffset = 0;
+  let starFloatDirection = 1;
 
   function jump() { if(!jumping) { marioVY = -15; jumping = true; } }
 
@@ -104,11 +113,8 @@ function startMarioGame(autoStart = false) {
     let maxHeight = 70;
     let minHeight = 30;
     let highProb = Math.min(0.3 + 0.05 * Math.floor(level/2), 0.7);
-    if(Math.random() < highProb){
-      return Math.floor(Math.random()*(maxHeight-50)+50); // haut
-    } else {
-      return Math.floor(Math.random()*(50-minHeight)+minHeight); // bas
-    }
+    return Math.random() < highProb ? Math.floor(Math.random()*(maxHeight-50)+50)
+                                    : Math.floor(Math.random()*(50-minHeight)+minHeight);
   }
 
   function startGame() {
@@ -126,7 +132,7 @@ function startMarioGame(autoStart = false) {
   window.addEventListener("keydown", e => { if(e.code==="Space" && gameStarted && !paused) jump(); });
 
   function gameLoop() {
-    ctx.clearRect(0,0,canvas.width,canvas.height); // canvas nettoyé
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
     // === sol ===
     ctx.fillStyle = "#000";
@@ -144,11 +150,17 @@ function startMarioGame(autoStart = false) {
       ctx.drawImage(jumping?marioJump:marioStand, 100, marioY, 50,50);
     }
 
-    // === spawn obstacles ===
-    if(!paused && frameCount%120===0){
+    // === spawn obstacles & star ===
+    if(!paused && frameCount % 120 === 0){
       const height = getObstacleHeight();
-      const type = Math.random() < 0.3 ? "triangle" : "square"; // 30% triangles
-      obstacles.push({x:canvas.width, y:groundY-height, w:30, h:height, type: type});
+      const type = Math.random() < 0.3 ? "triangle" : "square";
+      obstacles.push({x: canvas.width, y: groundY - height, w: 30, h: height, type: type});
+
+      if(level >= 2 && !star && Math.random() < 0.1){
+        star = {x: canvas.width, y: groundY - height - 80, w: 40, h: 40};
+        starFloatOffset = 0;
+        starFloatDirection = 1;
+      }
     }
 
     // === dessiner obstacles ===
@@ -157,19 +169,18 @@ function startMarioGame(autoStart = false) {
       const ob = obstacles[i];
       if(!paused) ob.x -= obstacleSpeed;
 
-      if(ob.type === "square"){
-        ctx.fillRect(ob.x + 0.5, ob.y + 0.5, ob.w, ob.h);
-      } else if(ob.type === "triangle"){
+      if(ob.type === "square") ctx.fillRect(ob.x+0.5, ob.y+0.5, ob.w, ob.h);
+      else if(ob.type === "triangle"){
         ctx.beginPath();
-        ctx.moveTo(ob.x + 0.5, ob.y + ob.h + 0.5);
-        ctx.lineTo(ob.x + ob.w/2, ob.y);
-        ctx.lineTo(ob.x + ob.w, ob.y + ob.h + 0.5);
+        ctx.moveTo(ob.x+0.5, ob.y+ob.h+0.5);
+        ctx.lineTo(ob.x+ob.w/2, ob.y);
+        ctx.lineTo(ob.x+ob.w, ob.y+ob.h+0.5);
         ctx.closePath();
         ctx.fill();
       }
 
-      // === collision Mario ===
-      if(!paused && 100+50>ob.x && 100<ob.x+ob.w && marioY+50>ob.y){
+      // collision Mario
+      if(!invincible && !paused && 100+50>ob.x && 100<ob.x+ob.w && marioY+50>ob.y){
         paused = true;
         deathAnimationY=0;
         deathAnimationVY=-10;
@@ -198,14 +209,45 @@ function startMarioGame(autoStart = false) {
       if(ob.x+ob.w<0){ obstacles.splice(i,1); score++; }
     }
 
+    // === dessiner star ===
+    if(star){
+      if(!paused){
+        star.x -= obstacleSpeed;
+        starFloatOffset += starFloatDirection*0.5;
+        if(starFloatOffset > 5 || starFloatOffset < -5) starFloatDirection*=-1;
+      }
+      ctx.drawImage(starImg, star.x, star.y + starFloatOffset, star.w, star.h);
+
+      if(100+50>star.x && 100<star.x+star.w && marioY+50>star.y+starFloatOffset && marioY<star.y+starFloatOffset+star.h){
+        invincible = true;
+        invincibleStartTime = performance.now();
+        invincibleSound.currentTime=0;
+        invincibleSound.play();
+        music.pause();
+        star = null;
+      }
+
+      if(star && star.x+star.w<0) star=null;
+    }
+
+    // === invincible timer ===
+    if(invincible){
+      const elapsedInv = performance.now() - invincibleStartTime;
+      if(elapsedInv >= 14000){
+        invincible = false;
+        music.currentTime=0;
+        music.play().catch(()=>{});
+      }
+    }
+
     // === accélération et niveau ===
     if(!paused && gameStarted){
       const now = performance.now();
       if(now - lastAccelerationTime >= nextAccelerationDelay){
         obstacleSpeed += 1;
         level++;
-        levelEl.textContent = "Level "+level;
-        powerUpSound.currentTime = 0;
+        levelEl.textContent="Level "+level;
+        powerUpSound.currentTime=0;
         powerUpSound.play().catch(()=>{});
         lastAccelerationTime = now;
         nextAccelerationDelay = 15000 + Math.random()*5000;
