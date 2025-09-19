@@ -27,24 +27,20 @@
 
   <script>
     function startMarioGame(autoStart = false) {
-      // Vider le body
       document.documentElement.style.background = "#fff";
       document.body.style.background = "#fff";
       document.body.innerHTML = "";
 
-      // Créer la musique à l'intérieur du jeu
       const music = new Audio("rainbow_ride_music.mp3");
       music.loop = true;
       const deathSound = new Audio("mario_death.m4a");
 
-      // Création du canvas
       const canvas = document.createElement("canvas");
       document.body.appendChild(canvas);
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       const ctx = canvas.getContext("2d");
 
-      // Timer
       const timerEl = document.createElement("div");
       timerEl.style.position = "fixed";
       timerEl.style.top = "10px";
@@ -66,6 +62,7 @@
       let score = 0;
       let gameStarted = false;
       let startTime = 0;
+      const groundY = canvas.height - 100;
 
       function jump() {
         if (!jumping) { marioVY = -15; jumping = true; }
@@ -75,16 +72,11 @@
         if (!gameStarted) {
           gameStarted = true;
           startTime = performance.now();
-          music.play().then(() => {
-            console.log("Music started ✅");
-          }).catch(err => {
-            console.error("Impossible de jouer la musique ❌", err);
-          });
+          music.play().catch(()=>{});
           gameLoop();
         }
       }
 
-      // Controls
       canvas.addEventListener("click", () => { if(gameStarted) jump(); });
       window.addEventListener("keydown", e => { if(e.code === "Space" && gameStarted) jump(); });
 
@@ -92,50 +84,51 @@
         ctx.fillStyle = "#fff";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        const groundY = canvas.height - 100;
         ctx.fillStyle = "#000";
         ctx.fillRect(0, groundY, canvas.width, 10);
 
         marioVY += 1;
         marioY += marioVY;
-        if(marioY > groundY - 50) { marioY = groundY - 50; marioVY = 0; jumping = false; }
+        if (marioY > groundY - 50) { marioY = groundY - 50; marioVY = 0; jumping = false; }
         ctx.drawImage(jumping ? marioJump : marioStand, 100, marioY, 50, 50);
 
-        // Spawn obstacles
+        // spawn obstacles
         if(frameCount % 120 === 0) {
           const height = Math.floor(Math.random()*40) + 30;
           obstacles.push({ x: canvas.width, y: groundY - height, w: 30, h: height });
         }
 
-        // Move & collisions
+        // move & collisions
         ctx.fillStyle = "#000";
-        for(let i = obstacles.length - 1; i >= 0; i--) {
+        for (let i = obstacles.length - 1; i >= 0; i--) {
           const ob = obstacles[i];
           ob.x -= obstacleSpeed;
           ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
 
-          // Collision
-        if(100 + 50 > ob.x && 100 < ob.x + ob.w && marioY + 50 > ob.y) {
-          // Collision : joue le deathSound, reset obstacles et Mario
-          deathSound.currentTime = 0;
-          deathSound.play();
+          // collision
+          if (100 + 50 > ob.x && 100 < ob.x + ob.w && marioY + 50 > ob.y) {
+            deathSound.currentTime = 0;
+            deathSound.play();
+            music.pause();
+            music.currentTime = 0;
 
-          // Pause et reset de la musique principale
-          music.pause();
-          music.currentTime = 0;
+            obstacles.length = 0;
+            marioY = groundY - 50;
+            marioVY = 0;
+            jumping = false;
+            score = 0;
+            obstacleSpeed = 5;
+            startTime = performance.now();
 
-          obstacles.length = 0;
-          marioY = groundY - 50;
-          marioVY = 0;
-          jumping = false;
-          score = 0;
-          obstacleSpeed = 5;
-          startTime = performance.now();
+            deathSound.onended = () => {
+              music.play().catch(()=>{});
+            };
+          }
 
-          // Redémarrer la musique principale uniquement après la fin du deathSound
-          deathSound.onended = () => {
-            music.play().catch(()=>{});
-          };
+          if(ob.x + ob.w < 0) {
+            obstacles.splice(i,1);
+            score++;
+          }
         }
 
         // HUD
