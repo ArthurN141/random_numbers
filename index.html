@@ -25,12 +25,18 @@
 <body>
   <button id="startBtn">Start</button>
 
+  <!-- Audio source pour la musique du jeu -->
+  <audio id="gameMusic" preload="auto">
+    <source src="rainbow_ride_music.m4a" type="audio/mp4">
+    Your browser does not support the audio element.
+  </audio>
+
   <script>
     function startMarioGame(musicObj = null, autoStart = false){
-      // ensure backgrounds
+      // page blanche
       document.documentElement.style.background = "#fff";
       document.body.style.background = "#fff";
-      document.body.innerHTML = ""; // replace page content
+      document.body.innerHTML = "";
 
       const canvas = document.createElement("canvas");
       document.body.appendChild(canvas);
@@ -73,22 +79,12 @@
         if(!gameStarted){
           gameStarted = true;
           startTime = performance.now();
-          try {
-            music.currentTime = 0;
-            console.log("Trying to play music...");
-            music.play().then(() => {
-              console.log("Music started successfully ✅");
-            }).catch(err => {
-              console.error("Music failed to play ❌:", err);
-            });
-          } catch(e){
-            console.error("Music error:", e);
-          }
+          try { music.currentTime = 0; music.play().catch(()=>{}); } catch(e){}
           gameLoop();
         }
       }
 
-      // controls
+      // contrôles
       canvas.addEventListener("click", ()=>{ if(gameStarted) jump(); });
       window.addEventListener("keydown", e => { if(e.code === "Space" && gameStarted) jump(); });
 
@@ -100,18 +96,19 @@
         ctx.fillStyle = "#000";
         ctx.fillRect(0, groundY, canvas.width, 10);
 
+        // physique Mario
         marioVY += 1;
         marioY += marioVY;
         if(marioY > groundY - 50){ marioY = groundY - 50; marioVY = 0; jumping = false; }
         ctx.drawImage(jumping ? marioJump : marioStand, 100, marioY, 50, 50);
 
-        // spawn obstacles
+        // obstacles
         if(frameCount % 120 === 0){
           const height = Math.floor(Math.random()*40) + 30;
           obstacles.push({ x: canvas.width, y: groundY - height, w: 30, h: height });
         }
 
-        // move & collisions
+        // collisions et mouvement obstacles
         ctx.fillStyle = "#000";
         for(let i = obstacles.length - 1; i >= 0; i--){
           const ob = obstacles[i];
@@ -119,7 +116,6 @@
           ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
 
           if(100 + 50 > ob.x && 100 < ob.x + ob.w && marioY + 50 > ob.y){
-            // death
             deathSound.play();
             try { music.pause(); } catch(e){}
             obstacles.length = 0;
@@ -129,16 +125,10 @@
             score = 0;
             obstacleSpeed = 5;
             startTime = performance.now();
-            try { 
-              music.currentTime = 0; 
-              music.play().catch(err => console.error("Music replay failed:", err)); 
-            } catch(e) { console.error("Replay error:", e); }
+            try { music.currentTime = 0; music.play().catch(()=>{}); } catch(e){}
           }
 
-          if(ob.x + ob.w < 0){
-            obstacles.splice(i,1);
-            score++;
-          }
+          if(ob.x + ob.w < 0){ obstacles.splice(i,1); score++; }
         }
 
         // HUD
@@ -149,9 +139,7 @@
         if(gameStarted){
           const elapsed = (performance.now() - startTime) / 1000;
           timerEl.textContent = elapsed.toFixed(2) + " sec";
-        } else {
-          timerEl.textContent = "0.00 sec";
-        }
+        } else { timerEl.textContent = "0.00 sec"; }
 
         ctx.font = "20px monospace";
         ctx.fillText("No Internet Connection", 20, canvas.height - 20);
@@ -163,22 +151,13 @@
       if(autoStart) startGame();
     }
 
-    // --- bouton start ---
+    // bouton Start
     const startBtn = document.getElementById("startBtn");
     startBtn.addEventListener("click", () => {
-      const supermarioMusic = new Audio("rainbow_ride_music.m4a");
-      supermarioMusic.loop = true;
-
-      console.log("Start button clicked, initializing game...");
-      supermarioMusic.play().then(() => {
-        console.log("Pre-play test ✅: music can be played");
-        supermarioMusic.pause();
-        supermarioMusic.currentTime = 0;
-        startMarioGame(supermarioMusic, true);
-      }).catch(err => {
-        console.error("Pre-play test ❌: music failed before game:", err);
-        startMarioGame(null, true);
-      });
+      const gameMusic = document.getElementById("gameMusic");
+      gameMusic.currentTime = 0;
+      gameMusic.play().catch(()=>{});
+      startMarioGame(gameMusic, true);
     });
   </script>
 </body>
