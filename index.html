@@ -23,7 +23,7 @@ body {
 </style>
 </head>
 <body>
-<button id="startBtn">Start</button>
+<button id="startBtn">Start1</button>
 
 <script>
 function isMobile() {
@@ -198,6 +198,20 @@ function startMarioGame(autoStart = false) {
         const width = isMobile() ? 40 : 30; // plus large sur mobile
         obstacles.push({x: canvas.width, y: groundY - height - 15, w: width, h: height, type: type});
       }
+    }
+    // === spawn star ===
+    if(level >= 2 && !star && !starSpawnedThisLevel){
+      if(Math.random() < 0.8){
+        let starY;
+        if(obstacles.length > 0 && Math.random() < 0.5){
+          const ob = obstacles[Math.floor(Math.random()*obstacles.length)];
+          starY = ob.y - 40; 
+        } else {
+          starY = groundY - 50 - Math.random()*150; 
+        }
+        star = {x: canvas.width, y: starY, w: 40, h: 40};
+      }
+      starSpawnedThisLevel = true; 
     }
 
     // === dessiner obstacles ===
