@@ -34,6 +34,7 @@ function startMarioGame(autoStart = false) {
   const music = new Audio("rainbow_ride_music.mp3");
   music.loop = true;
   const deathSound = new Audio("mario_death.m4a");
+  const powerUpSound = new Audio("super_mario_power_up.m4a");
 
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
@@ -52,8 +53,9 @@ function startMarioGame(autoStart = false) {
 
   const levelEl = document.createElement("div");
   levelEl.style.position = "fixed";
-  levelEl.style.top = "50px";
-  levelEl.style.right = "20px";
+  levelEl.style.top = "10px";             // juste sous le haut de l'écran
+  levelEl.style.left = "50%";             // centré horizontalement
+  levelEl.style.transform = "translateX(-50%)";
   levelEl.style.fontFamily = "monospace";
   levelEl.style.fontSize = "30px";
   levelEl.style.color = "#000";
@@ -174,6 +176,8 @@ function startMarioGame(autoStart = false) {
         obstacleSpeed += 1;
         level++;
         levelEl.textContent = "Level "+level;
+        powerUpSound.currentTime = 0;
+        powerUpSound.play().catch()=>{});
         lastAccelerationTime = now;
         nextAccelerationDelay = 15000 + Math.random()*5000;
       }
