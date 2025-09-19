@@ -258,7 +258,6 @@ function startMarioGame(autoStart = false) {
     if(!paused && gameStarted){
       const now = performance.now();
       if(now - lastAccelerationTime >= nextAccelerationDelay){
-        obstacleSpeed += 1;
         level++;
         levelEl.textContent="Level "+level;
         powerUpSound.currentTime=0;
