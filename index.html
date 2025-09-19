@@ -53,7 +53,7 @@ function startMarioGame(autoStart = false) {
 
   const levelEl = document.createElement("div");
   levelEl.style.position = "fixed";
-  levelEl.style.top = "10px";             // juste sous le haut de l'écran
+  levelEl.style.top = "50px";             // juste sous le haut de l'écran
   levelEl.style.left = "50%";             // centré horizontalement
   levelEl.style.transform = "translateX(-50%)";
   levelEl.style.fontFamily = "monospace";
@@ -132,14 +132,24 @@ function startMarioGame(autoStart = false) {
 
     if(!paused && frameCount%120===0){
       const height = getObstacleHeight();
-      obstacles.push({x:canvas.width, y:groundY-height, w:30, h:height});
+      const type = Math.random() < 0.3 ? "triangle" : "square"; // 30% de chance d'être un triangle
+      obstacles.push({x:canvas.width, y:groundY-height, w:30, h:height, type: type});
     }
 
     ctx.fillStyle="#000";
     for(let i=obstacles.length-1;i>=0;i--){
       const ob = obstacles[i];
       if(!paused) ob.x -= obstacleSpeed;
-      ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
+      if(ob.type === "square"){
+        ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
+      } else if(ob.type === "triangle"){
+        ctx.beginPath();
+        ctx.moveTo(ob.x, ob.y + ob.h);       // bas gauche
+        ctx.lineTo(ob.x + ob.w / 2, ob.y);   // sommet
+        ctx.lineTo(ob.x + ob.w, ob.y + ob.h); // bas droit
+        ctx.closePath();
+        ctx.fill();
+      }
 
       if(!paused && 100+50>ob.x && 100<ob.x+ob.w && marioY+50>ob.y){
         paused = true;
