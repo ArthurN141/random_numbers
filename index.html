@@ -50,6 +50,16 @@ function startMarioGame(autoStart = false) {
   timerEl.style.color = "#000";
   document.body.appendChild(timerEl);
 
+  const levelEl = document.createElement("div");
+  levelEl.style.position = "fixed";
+  levelEl.style.top = "50px";
+  levelEl.style.right = "20px";
+  levelEl.style.fontFamily = "monospace";
+  levelEl.style.fontSize = "30px";
+  levelEl.style.color = "#000";
+  levelEl.textContent = "Level 1";
+  document.body.appendChild(levelEl);
+
   const marioStand = new Image(); marioStand.src = "super_mario.png";
   const marioJump = new Image(); marioJump.src = "super_mario_jump.png";
   const marioDeath = new Image(); marioDeath.src = "super_mario_death.png";
@@ -63,18 +73,31 @@ function startMarioGame(autoStart = false) {
   let score = 0;
   let gameStarted = false;
   let startTime = 0;
-  let lastAccelerationTime = 0;
   let paused = false;
-  let deathAnimationY = 0; // hauteur de l'animation
-  let deathAnimationVY = -10; // vitesse initiale du "rebond"
+  let deathAnimationY = 0;
+  let deathAnimationVY = -10;
   const groundY = canvas.height - 100;
 
-  function jump() {
-    if (!jumping) { marioVY = -15; jumping = true; }
+  let level = 1;
+  let nextAccelerationDelay = 15000 + Math.random() * 5000; // 15-20s
+  let lastAccelerationTime = 0;
+
+  function jump() { if(!jumping) { marioVY = -15; jumping = true; } }
+
+  function getObstacleHeight() {
+    // probabilité d'obstacle haut augmente tous les 2 niveaux
+    let maxHeight = 70;
+    let minHeight = 30;
+    let highProb = Math.min(0.3 + 0.05 * Math.floor(level/2), 0.7); // plafonné à 70%
+    if(Math.random() < highProb){
+      return Math.floor(Math.random()*(maxHeight-50)+50); // haut
+    } else {
+      return Math.floor(Math.random()*(50-minHeight)+minHeight); // bas
+    }
   }
 
   function startGame() {
-    if (!gameStarted) {
+    if(!gameStarted){
       gameStarted = true;
       startTime = performance.now();
       lastAccelerationTime = performance.now();
@@ -85,92 +108,87 @@ function startMarioGame(autoStart = false) {
   }
 
   canvas.addEventListener("click", () => { if(gameStarted && !paused) jump(); });
-  window.addEventListener("keydown", e => { if(e.code === "Space" && gameStarted && !paused) jump(); });
+  window.addEventListener("keydown", e => { if(e.code==="Space" && gameStarted && !paused) jump(); });
 
   function gameLoop() {
     ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
     ctx.fillStyle = "#000";
     ctx.fillRect(0, groundY, canvas.width, 10);
 
-    // Si pause et animation de mort
     if(paused){
-      deathAnimationVY += 0.5; // gravité
+      deathAnimationVY += 0.5;
       deathAnimationY += deathAnimationVY;
-      ctx.drawImage(marioDeath, 100, groundY - 50 + deathAnimationY, 50, 50);
+      ctx.drawImage(marioDeath, 100, groundY-50+deathAnimationY, 50,50);
     } else {
-      // mouvement Mario normal
       marioVY += 1;
       marioY += marioVY;
-      if (marioY > groundY - 50) { marioY = groundY - 50; marioVY = 0; jumping = false; }
-      ctx.drawImage(jumping ? marioJump : marioStand, 100, marioY, 50, 50);
+      if(marioY > groundY-50){ marioY=groundY-50; marioVY=0; jumping=false; }
+      ctx.drawImage(jumping?marioJump:marioStand, 100, marioY, 50,50);
     }
 
-    // spawn obstacles
-    if(!paused && frameCount % 120 === 0) {
-      const height = Math.floor(Math.random()*40) + 30;
-      obstacles.push({ x: canvas.width, y: groundY - height, w: 30, h: height });
+    if(!paused && frameCount%120===0){
+      const height = getObstacleHeight();
+      obstacles.push({x:canvas.width, y:groundY-height, w:30, h:height});
     }
 
-    // move & collisions
-    ctx.fillStyle = "#000";
-    for (let i = obstacles.length - 1; i >= 0; i--) {
+    ctx.fillStyle="#000";
+    for(let i=obstacles.length-1;i>=0;i--){
       const ob = obstacles[i];
       if(!paused) ob.x -= obstacleSpeed;
       ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
 
-      // collision
-      if (!paused && 100 + 50 > ob.x && 100 < ob.x + ob.w && marioY + 50 > ob.y) {
-        paused = true; 
-        deathAnimationY = 0;
-        deathAnimationVY = -10;
-        deathSound.currentTime = 0;
+      if(!paused && 100+50>ob.x && 100<ob.x+ob.w && marioY+50>ob.y){
+        paused = true;
+        deathAnimationY=0;
+        deathAnimationVY=-10;
+        deathSound.currentTime=0;
         deathSound.play();
         music.pause();
-        music.currentTime = 0;
+        music.currentTime=0;
+        obstacles.length=0;
+        marioY = groundY-50;
+        marioVY=0;
+        jumping=false;
+        score=0;
+        obstacleSpeed=5;
+        level=1;
+        levelEl.textContent="Level "+level;
+        nextAccelerationDelay = 15000 + Math.random()*5000;
 
-        obstacles.length = 0;
-        marioY = groundY - 50;
-        marioVY = 0;
-        jumping = false;
-        score = 0;
-        obstacleSpeed = 5;
-
-        deathSound.onended = () => {
-          paused = false;
+        deathSound.onended = ()=>{
+          paused=false;
           startTime = performance.now();
           lastAccelerationTime = performance.now();
           music.play().catch(()=>{});
         };
       }
 
-      if(ob.x + ob.w < 0) {
-        obstacles.splice(i,1);
-        score++;
-      }
+      if(ob.x+ob.w<0){ obstacles.splice(i,1); score++; }
     }
 
-    // augmentation obstacleSpeed toutes les 30 sec
-    if (!paused && gameStarted) {
+    if(!paused && gameStarted){
       const now = performance.now();
-      if (now - lastAccelerationTime >= 30000) {
+      if(now - lastAccelerationTime >= nextAccelerationDelay){
         obstacleSpeed += 1;
+        level++;
+        levelEl.textContent = "Level "+level;
         lastAccelerationTime = now;
+        nextAccelerationDelay = 15000 + Math.random()*5000;
       }
     }
 
-    // HUD
-    ctx.fillStyle = "#000";
-    ctx.font = "30px monospace";
-    ctx.fillText("Score: " + score, 20, 50);
+    ctx.fillStyle="#000";
+    ctx.font="30px monospace";
+    ctx.fillText("Score: "+score, 20,50);
 
-    const elapsed = paused ? (timerEl.textContent ? parseFloat(timerEl.textContent) : 0)
-                           : (performance.now() - startTime) / 1000;
-    timerEl.textContent = elapsed.toFixed(2) + " sec";
+    const elapsed = paused ? (timerEl.textContent?parseFloat(timerEl.textContent):0)
+                           : (performance.now()-startTime)/1000;
+    timerEl.textContent = elapsed.toFixed(2)+" sec";
 
-    ctx.font = "20px monospace";
-    ctx.fillText("No Internet Connection", 20, canvas.height - 20);
+    ctx.font="20px monospace";
+    ctx.fillText("No Internet Connection",20,canvas.height-20);
 
     frameCount++;
     requestAnimationFrame(gameLoop);
@@ -180,9 +198,7 @@ function startMarioGame(autoStart = false) {
 }
 
 const startBtn = document.getElementById("startBtn");
-startBtn.addEventListener("click", () => {
-  startMarioGame(true);
-});
+startBtn.addEventListener("click", ()=>{ startMarioGame(true); });
 </script>
 </body>
 </html>
