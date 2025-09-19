@@ -23,7 +23,7 @@ body {
 </style>
 </head>
 <body>
-<button id="startBtn">Start</button>
+<button id="startBtn">Start1</button>
 
 <script>
 function isMobile() {
@@ -175,8 +175,8 @@ function startMarioGame(autoStart = false) {
     const marioX = 100;
 
     // Définir position du skate selon mobile ou PC
-    const skateX = isMobile() ? marioX - 18 : marioX - 10;
-    const skateY = isMobile() ? groundY - 20 : groundY - 18;
+    const skateX = isMobile() ? marioX - 23 : marioX - 10;
+    const skateY = isMobile() ? groundY - 33 : groundY - 18;
 
     if(paused){
       deathAnimationVY += 0.5;
