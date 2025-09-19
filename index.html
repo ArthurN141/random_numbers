@@ -25,7 +25,6 @@
 <body>
   <button id="startBtn">Start</button>
 
-  <!-- Audio source pour la musique du jeu -->
   <audio id="gameMusic" preload="auto">
     <source src="rainbow_ride_music.m4a" type="audio/mp4">
     Your browser does not support the audio element.
@@ -33,7 +32,6 @@
 
   <script>
     function startMarioGame(musicObj = null, autoStart = false){
-      // page blanche
       document.documentElement.style.background = "#fff";
       document.body.style.background = "#fff";
       document.body.innerHTML = "";
@@ -44,7 +42,6 @@
       canvas.height = window.innerHeight;
       const ctx = canvas.getContext("2d");
 
-      // timer
       const timerEl = document.createElement("div");
       timerEl.style.position = "fixed";
       timerEl.style.top = "10px";
@@ -79,12 +76,19 @@
         if(!gameStarted){
           gameStarted = true;
           startTime = performance.now();
-          try { music.currentTime = 0; music.play().catch(()=>{}); } catch(e){}
+
+          // DEBUG lecture musique
+          music.play().then(() => {
+            console.log("Music started successfully ✅");
+          }).catch(err => {
+            console.error("Music failed to play ❌", err);
+            alert("Impossible de jouer la musique : " + err.message);
+          });
+
           gameLoop();
         }
       }
 
-      // contrôles
       canvas.addEventListener("click", ()=>{ if(gameStarted) jump(); });
       window.addEventListener("keydown", e => { if(e.code === "Space" && gameStarted) jump(); });
 
@@ -96,19 +100,16 @@
         ctx.fillStyle = "#000";
         ctx.fillRect(0, groundY, canvas.width, 10);
 
-        // physique Mario
         marioVY += 1;
         marioY += marioVY;
         if(marioY > groundY - 50){ marioY = groundY - 50; marioVY = 0; jumping = false; }
         ctx.drawImage(jumping ? marioJump : marioStand, 100, marioY, 50, 50);
 
-        // obstacles
         if(frameCount % 120 === 0){
           const height = Math.floor(Math.random()*40) + 30;
           obstacles.push({ x: canvas.width, y: groundY - height, w: 30, h: height });
         }
 
-        // collisions et mouvement obstacles
         ctx.fillStyle = "#000";
         for(let i = obstacles.length - 1; i >= 0; i--){
           const ob = obstacles[i];
@@ -131,7 +132,6 @@
           if(ob.x + ob.w < 0){ obstacles.splice(i,1); score++; }
         }
 
-        // HUD
         ctx.fillStyle = "#000";
         ctx.font = "30px monospace";
         ctx.fillText("Score: " + score, 20, 50);
@@ -151,12 +151,11 @@
       if(autoStart) startGame();
     }
 
-    // bouton Start
     const startBtn = document.getElementById("startBtn");
     startBtn.addEventListener("click", () => {
       const gameMusic = document.getElementById("gameMusic");
       gameMusic.currentTime = 0;
-      gameMusic.play().catch(()=>{});
+      gameMusic.play().catch(err => alert("Impossible de jouer la musique : " + err.message));
       startMarioGame(gameMusic, true);
     });
   </script>
