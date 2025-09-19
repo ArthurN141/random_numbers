@@ -165,7 +165,7 @@ function startMarioGame(autoStart = false) {
 
     // === spawn star ===
     if(level >= 2 && !star && !starSpawnedThisLevel){
-        if(Math.random() < 0.1){ // 10% par niveau
+        if(Math.random() < 0.8){ // 10% par niveau
             let starY;
             if(obstacles.length > 0 && Math.random() < 0.5){
                 const ob = obstacles[Math.floor(Math.random()*obstacles.length)];
