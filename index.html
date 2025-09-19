@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Random Number Generator</title>
+<title>Random Number Generator + Mario Game</title>
 <style>
   * { box-sizing: border-box; }
+  html,body { height:100%; margin:0; }
   body {
     font-family: monospace;
     background: #111;
@@ -14,9 +15,9 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
-    margin: 0;
     overflow: hidden;
   }
+
   .initial-container {
     background: #000;
     padding: 30px;
@@ -41,28 +42,18 @@
     background: #111;
     color: #0f0;
   }
-  button {
-    cursor: pointer;
-    background: #e63946;
-    color: white;
-    border: none;
-  }
-  .progress-bar {
-    margin-top: 15px;
-    width: 100%;
-    height: 10px;
-    background: #222;
-    border-radius: 5px;
-    overflow: hidden;
-    display: none;
-  }
-  .progress { height: 100%; width: 0%; background: #e63946; transition: width 0.1s linear; }
-  .result { margin-top: 20px; text-align: left; font-size: 14px; max-height: 400px; overflow-y: auto; }
-  @keyframes popupGrow { 0% { transform: translate(-50%,-50%) scale(0.9);} 100% { transform: translate(-50%,-50%) scale(1.1);} }
-  .popup { position: fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(1); background:#e63946;color:#fff;padding:25px 45px;font-size:25px;font-weight:bold;border-radius:10px;display:none;z-index:999;box-shadow:0 0 30px #fff;text-align:center;pointer-events:none;}
-  @keyframes fallDown { 0% { transform: translateY(0); opacity: 1;} 100% { transform: translateY(100vh); opacity: 0; } }
-  .fall { animation: fallDown 2s forwards; }
-  #audio-toggle { position: fixed; top:10px; left:10px; font-size:24px; color:#0f0; cursor:pointer; user-select:none; z-index:1000;}
+  button { cursor: pointer; background: #e63946; color:white; border:none; }
+
+  .progress-bar { margin-top:15px; width:100%; height:10px; background:#222; border-radius:5px; overflow:hidden; display:none; }
+  .progress { height:100%; width:0%; background:#e63946; transition: width 0.1s linear; }
+  .result { margin-top:20px; text-align:left; font-size:14px; max-height:400px; overflow-y:auto; color:#0f0; }
+
+  .popup { position: fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#e63946; color:#fff; padding:25px 45px; font-size:25px; font-weight:bold; border-radius:10px; display:none; z-index:999; box-shadow:0 0 30px #fff; text-align:center; pointer-events:none; }
+
+  /* on n'utilise plus .fall CSS pour la chute afin de préserver scale (JS transition) */
+  @keyframes popupGrow { 0% { transform: translate(-50%,-50%) scale(0.9); } 100% { transform: translate(-50%,-50%) scale(1.1); } }
+
+  #audio-toggle { position: fixed; top:10px; left:10px; font-size:24px; color:#0f0; cursor:pointer; user-select:none; z-index:1000; }
   #clock { position: fixed; top:10px; right:15px; font-size:16px; color:#0f0; }
   #bottom-left,#bottom-right { position: fixed; bottom:10px; font-size:14px; color:#0f0; }
   #bottom-left { left:15px; } #bottom-right { right:15px; } #bottom-right a { color:#0f0; text-decoration:none; } #bottom-right a:hover { text-decoration:underline; }
@@ -87,26 +78,25 @@
 <div class="popup" id="popup">⚠️ WARNING 451 Critical errors detected !</div>
 
 <script>
-/* --- Global audio / UI --- */
+/* --- global audio / clock --- */
 const bgMusic = document.getElementById("bg-music");
 const audioToggle = document.getElementById("audio-toggle");
-function startMusic() { if(bgMusic.paused) bgMusic.play().catch(err=>console.log("Autoplay bloqué:",err)); }
-audioToggle.addEventListener("click", ()=>{ bgMusic.muted = !bgMusic.muted; audioToggle.textContent = bgMusic.muted ? "🔇" : "🔊"; });
+function startMusic(){ if(bgMusic.paused) bgMusic.play().catch(()=>{}); }
+audioToggle.addEventListener("click", ()=>{ bgMusic.muted = !bgMusic.muted; audioToggle.textContent = bgMusic.muted ? "🔇":"🔊"; });
 
-function updateClock(){ const now=new Date(); const el=document.getElementById("clock"); if(el) el.textContent = now.toLocaleDateString() + " " + now.toLocaleTimeString(); }
-setInterval(updateClock,1000); updateClock();
+function updateClock(){ const now = new Date(); const el = document.getElementById("clock"); if(el) el.textContent = now.toLocaleDateString() + " " + now.toLocaleTimeString(); }
+setInterval(updateClock, 1000); updateClock();
 
 let finalNumber = null;
 
-/* --- Fake generate (progress + errors) --- */
+/* --- Fake generate + progress --- */
 function fakeGenerate(){
   startMusic();
-  const resultElement=document.getElementById("result");
-  const progressBar=document.querySelector(".progress-bar");
-  const progress=document.getElementById("progress");
-
+  const resultElement = document.getElementById("result");
+  const progressBar = document.querySelector(".progress-bar");
+  const progress = document.getElementById("progress");
   const fromVal = parseInt(document.getElementById("from").value);
-  const toVal   = parseInt(document.getElementById("to").value);
+  const toVal = parseInt(document.getElementById("to").value);
   finalNumber = (!isNaN(fromVal) && !isNaN(toVal) && fromVal < toVal) ? Math.floor(Math.random()*(toVal-fromVal+1))+fromVal : null;
 
   resultElement.innerHTML = "";
@@ -118,18 +108,18 @@ function fakeGenerate(){
     dots = dots.length < 3 ? dots + "." : "";
     const cpuUsage = Math.floor(Math.random()*(85-79+1))+79;
     resultElement.innerHTML = `Processing${dots} (using ${cpuUsage}% of CPU)`;
-  },500);
+  }, 500);
 
   let tick = 0;
   const totalTicks = 40;
-  const increment = 100/totalTicks;
+  const increment = 100 / totalTicks;
   const barInterval = setInterval(()=>{
     if(tick >= totalTicks){ clearInterval(barInterval); clearInterval(dotInterval); startErrorScroll(); }
     else progress.style.width = (increment * ++tick) + "%";
   }, 100);
 }
 
-/* --- Errors scroll --- */
+/* --- Errors scrolling --- */
 function startErrorScroll(){
   const container = document.getElementById("container");
   const resultElement = document.getElementById("result");
@@ -169,21 +159,20 @@ function startErrorScroll(){
       index++;
     } else {
       clearInterval(scrollInterval);
-      show404(); // on passe à l'écran final
+      show404();
     }
   }, intervalTime);
 }
 
-/* --- ECRAN 404 -> puis START screen puis jeu --- */
-function show404() {
-  // Arrêter la musique background si besoin
-  if (!bgMusic.paused) { bgMusic.pause(); bgMusic.currentTime = 0; }
+/* --- show404 / start screen / and handing animations --- */
+function show404(){
+  // stop bgMusic if playing
+  if(!bgMusic.paused){ bgMusic.pause(); bgMusic.currentTime = 0; }
 
-  // afficher l'écran contenant les deux textes (comportement inchangé)
   document.body.innerHTML = `
     <div id="error-screen" style="color:#f00; text-align:center; font-family:monospace;">
-      <h1 id="error-text" style="cursor:pointer;">404 Not Found</h1>
-      <p id="click-text" style="cursor:pointer;">The page you are looking for does not exist;</p>
+      <h1 id="error-text" style="cursor:pointer; display:block; margin:0 0 20px 0;">404 Not Found</h1>
+      <p id="click-text" style="cursor:pointer; display:inline-block; margin:0;">The page you are looking for does not exist;</p>
     </div>
   `;
   document.body.style.background = "#000";
@@ -194,9 +183,13 @@ function show404() {
   const errorEl = document.getElementById("error-text");
   const clickEl  = document.getElementById("click-text");
 
+  // init dataset
   errorEl.dataset.clicked = 0;
   clickEl.dataset.step = 0;
   clickEl.dataset.scale = 1;
+  clickEl.style.display = "inline-block";
+  clickEl.style.transformOrigin = "center center";
+  clickEl.style.transform = "scale(1)";
   let clickZoomInterval = null;
 
   const helloSteps = [
@@ -208,6 +201,8 @@ function show404() {
 
   function startClickZoom(){
     if(clickZoomInterval) return;
+    // ensure transform origin center to avoid moving
+    clickEl.style.transformOrigin = "center center";
     clickZoomInterval = setInterval(()=>{
       let scale = parseFloat(clickEl.dataset.scale) + 0.01;
       clickEl.dataset.scale = scale;
@@ -215,71 +210,102 @@ function show404() {
     }, 50);
   }
 
+  function stopClickZoom(){
+    if(clickZoomInterval){ clearInterval(clickZoomInterval); clickZoomInterval = null; }
+  }
+
+  function fallElement(el){
+    // read current scale (from dataset or computed)
+    let scale = parseFloat(el.dataset.scale || 1);
+    // ensure transform origin center
+    el.style.transformOrigin = "center center";
+    // ensure initial transform contains current scale and translateY(0)
+    el.style.transition = "transform 2s linear, opacity 2s linear";
+    el.style.opacity = "1";
+    // start from translateY(0) scale(s)
+    el.style.transform = `translateY(0) scale(${scale})`;
+    // force reflow then move
+    void el.offsetWidth;
+    // animate to translateY(100vh) scale(s)
+    requestAnimationFrame(()=> {
+      el.style.transform = `translateY(100vh) scale(${scale})`;
+      el.style.opacity = "0";
+    });
+  }
+
   let errorFallen = false;
 
-  // si on clique sur le texte du haut : joue strangerMusic et comportement
+  // click top text
   errorEl.addEventListener("click", () => {
-    if (strangerMusic.paused) strangerMusic.play().catch(()=>{});
-
+    try { if (strangerMusic.paused) strangerMusic.play().catch(()=>{}); } catch(e){}
     if (parseInt(errorEl.dataset.clicked) === 0) {
       errorEl.textContent = (finalNumber !== null) ? String(finalNumber) : "ERROR";
       errorEl.dataset.clicked = 1;
     } else if (parseInt(errorEl.dataset.clicked) === 1) {
       errorEl.dataset.clicked = 2;
-      errorEl.classList.add("fall");
+      // fall with JS transition (preserve scale)
+      fallElement(errorEl);
 
-      // quand la chute du texte du haut est terminée -> on montre l'écran START (page blanche)
-      errorEl.addEventListener("animationend", () => {
+      // when transition ends (chute finie) -> show START screen after a short delay so user has time
+      const onEnd = () => {
         errorFallen = true;
-
-        // si le texte du bas a déjà une étape (au moins "Hello World"), démarrer le zoom
+        // if bottom already has a step, start zoom
         if (parseInt(clickEl.dataset.step) > 0 && !clickZoomInterval) startClickZoom();
 
-        // arrêter strangerMusic et afficher l'écran blanc avec bouton START
-        if (!strangerMusic.paused) {
-          try { strangerMusic.pause(); strangerMusic.currentTime = 0; } catch(e){}
-        }
+        // stop strangerMusic
+        try { strangerMusic.pause(); strangerMusic.currentTime = 0; } catch(e){}
 
-        showStartScreen(); // remplace l'écran par l'écran START (blanc + bouton)
-      }, { once: true });
+        // delay a bit to give user time if they want to continue clicking bottom text
+        setTimeout(()=> { showStartScreen(); }, 700);
+      };
+      errorEl.addEventListener("transitionend", onEnd, { once: true });
     }
   });
 
-  // si on clique sur le texte du bas : étapes + zoom possible (si error tombé)
+  // click bottom text: cycles steps and starts zoom only if error fallen and step>=1
   clickEl.addEventListener("click", () => {
-    if (strangerMusic.paused) strangerMusic.play().catch(()=>{}); // joue aussi si clique sur bas
+    try { if (strangerMusic.paused) strangerMusic.play().catch(()=>{}); } catch(e){}
     let step = parseInt(clickEl.dataset.step);
     if (step < helloSteps.length) {
       clickEl.textContent = helloSteps[step];
       clickEl.dataset.step = step + 1;
-
+      // only start zoom if top text has fallen already
       if (errorFallen && !clickZoomInterval) startClickZoom();
     } else {
-      clickEl.classList.add("fall");
-      if (clickZoomInterval) { clearInterval(clickZoomInterval); clickZoomInterval = null; }
+      // last step -> make it fall (preserve scale)
+      stopClickZoom();
+      fallElement(clickEl);
     }
   });
 
-  // Fonction locale qui affiche l'écran blanc avec bouton START
+  // shows full-page white start screen with Start button
   function showStartScreen(){
+    // set backgrounds to white for full page
+    document.documentElement.style.background = "#fff";
+    document.body.style.background = "#fff";
     document.body.innerHTML = `
       <div id="start-screen" style="background:#fff; height:100vh; display:flex; align-items:center; justify-content:center;">
         <button id="start-btn" style="background:#000; color:#fff; border:none; padding:20px 40px; font-size:24px; cursor:pointer;">START</button>
       </div>
     `;
-    // Bouton Start : lance le jeu (et la musique du jeu)
     const btn = document.getElementById("start-btn");
+    btn.focus();
+    // On click: create and play the game music right inside the user gesture then start game using that audio object
     btn.addEventListener("click", () => {
-      startMarioGame(true); // true => démarre immédiatement le jeu et la musique
-    });
+      const pendingMusic = new Audio("rainbow_ride_music.m4a");
+      pendingMusic.loop = true;
+      pendingMusic.play().catch(()=>{}); // fired inside user gesture => should be allowed
+      startMarioGame(pendingMusic, true);
+    }, { once: true });
   }
 }
 
-/* --- Jeu Mario (canvas) --- */
-function startMarioGame(autoStart = false) {
-  // Remplace tout par le canvas
-  document.body.innerHTML = "";
+/* --- Mario game: accepts optional music object created from the user click --- */
+function startMarioGame(musicObj = null, autoStart = false){
+  // ensure backgrounds
+  document.documentElement.style.background = "#fff";
   document.body.style.background = "#fff";
+  document.body.innerHTML = ""; // replace page content
 
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
@@ -287,7 +313,7 @@ function startMarioGame(autoStart = false) {
   canvas.height = window.innerHeight;
   const ctx = canvas.getContext("2d");
 
-  // Timer (haut droite)
+  // timer
   const timerEl = document.createElement("div");
   timerEl.style.position = "fixed";
   timerEl.style.top = "10px";
@@ -299,9 +325,11 @@ function startMarioGame(autoStart = false) {
 
   const marioStand = new Image(); marioStand.src = "super_mario.png";
   const marioJump  = new Image(); marioJump.src  = "super_mario_jump.png";
-  const music = new Audio("rainbow_ride_music.m4a");
-  const deathSound = new Audio("mario_death.m4a");
+
+  // use provided music if present, otherwise create one (note: start must be triggered by user)
+  const music = musicObj || new Audio("rainbow_ride_music.m4a");
   music.loop = true;
+  const deathSound = new Audio("mario_death.m4a");
 
   let marioY = canvas.height - 150;
   let marioVY = 0;
@@ -313,53 +341,54 @@ function startMarioGame(autoStart = false) {
   let gameStarted = false;
   let startTime = 0;
 
-  function jump() {
-    if (!jumping) { marioVY = -15; jumping = true; }
+  function jump(){
+    if(!jumping){ marioVY = -15; jumping = true; }
   }
 
-  // démarrer le jeu (lancer boucle + musique)
-  function startGame() {
-    if (!gameStarted) {
+  // start game function (plays music)
+  function startGame(){
+    if(!gameStarted){
       gameStarted = true;
       startTime = performance.now();
-      music.currentTime = 0;
-      music.play().catch(()=>{}); // lancé suite à un clic utilisateur (START) => ok
+      try { music.currentTime = 0; music.play().catch(()=>{}); } catch(e){}
       gameLoop();
     }
   }
 
-  // contrôles
-  canvas.addEventListener("click", () => { if(!gameStarted) startGame(); jump(); });
-  window.addEventListener("keydown", e => { if (e.code === "Space") { if(!gameStarted) startGame(); jump(); } });
+  // controls
+  canvas.addEventListener("click", ()=>{ if(!gameStarted) startGame(); jump(); });
+  window.addEventListener("keydown", e => { if(e.code === "Space"){ if(!gameStarted) startGame(); jump(); } });
 
-  function gameLoop() {
-    ctx.fillStyle = "#fff"; ctx.fillRect(0,0,canvas.width,canvas.height);
+  function gameLoop(){
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
     const groundY = canvas.height - 100;
-    ctx.fillStyle = "#000"; ctx.fillRect(0, groundY, canvas.width, 10);
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, groundY, canvas.width, 10);
 
-    // mario physics
     marioVY += 1;
     marioY += marioVY;
-    if (marioY > groundY - 50) { marioY = groundY - 50; marioVY = 0; jumping = false; }
+    if(marioY > groundY - 50){ marioY = groundY - 50; marioVY = 0; jumping = false; }
     ctx.drawImage(jumping ? marioJump : marioStand, 100, marioY, 50, 50);
 
     // spawn obstacles
-    if (frameCount % 120 === 0) {
-      const height = Math.floor(Math.random() * 40) + 30;
+    if(frameCount % 120 === 0){
+      const height = Math.floor(Math.random()*40) + 30;
       obstacles.push({ x: canvas.width, y: groundY - height, w: 30, h: height });
     }
 
-    // move & collision
+    // move & collisions
     ctx.fillStyle = "#000";
-    for (let i = obstacles.length - 1; i >= 0; i--) {
+    for(let i = obstacles.length - 1; i >= 0; i--){
       const ob = obstacles[i];
       ob.x -= obstacleSpeed;
       ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
 
-      // collision simple AABB
-      if (100 + 50 > ob.x && 100 < ob.x + ob.w && marioY + 50 > ob.y) {
+      if(100 + 50 > ob.x && 100 < ob.x + ob.w && marioY + 50 > ob.y){
+        // death
         deathSound.play();
-        music.pause();
+        try { music.pause(); } catch(e){}
         obstacles.length = 0;
         marioY = groundY - 50;
         marioVY = 0;
@@ -367,22 +396,21 @@ function startMarioGame(autoStart = false) {
         score = 0;
         obstacleSpeed = 5;
         startTime = performance.now();
-        music.currentTime = 0;
-        music.play().catch(()=>{}); // relancer musique après mort
+        try { music.currentTime = 0; music.play().catch(()=>{}); } catch(e){}
       }
 
-      if (ob.x + ob.w < 0) {
-        obstacles.splice(i, 1);
+      if(ob.x + ob.w < 0){
+        obstacles.splice(i,1);
         score++;
       }
     }
 
-    // Score + timer + footer
+    // HUD
     ctx.fillStyle = "#000";
     ctx.font = "30px monospace";
     ctx.fillText("Score: " + score, 20, 50);
 
-    if (gameStarted) {
+    if(gameStarted){
       const elapsed = (performance.now() - startTime) / 1000;
       timerEl.textContent = elapsed.toFixed(2) + " sec";
     } else {
@@ -396,8 +424,8 @@ function startMarioGame(autoStart = false) {
     requestAnimationFrame(gameLoop);
   }
 
-  // si autoStart demandé (on vient du bouton START), on lance immédiatement le jeu
-  if (autoStart) startGame();
+  // auto-start if requested (e.g. button click requested immediate start)
+  if(autoStart) startGame();
 }
 </script>
 </body>
