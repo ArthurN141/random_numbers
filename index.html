@@ -223,11 +223,15 @@ function startMarioGame(autoStart = false) {
     if(level >= 2 && !star && !starSpawnedThisLevel){
         if(Math.random() < 0.1){
             let starY;
+            const maxJumpY = groundY - marioHeight - 225; // hauteur max atteignable
             if(obstacles.length > 0 && Math.random() < 0.5){
                 const ob = obstacles[Math.floor(Math.random() * obstacles.length)];
-                starY = ob.y - 40;
+                starY = ob.y - 40; // au-dessus obstacle
             } else {
-                starY = groundY - 50 - Math.random()*150;
+                // hauteur aléatoire mais atteignable
+                const minY = groundY - 100; // au moins 100px au-dessus du sol
+                const maxY = maxJumpY + 20; // marge de sécurité
+                starY = Math.random() * (minY - maxY) + maxY;
             }
             star = {x: canvas.width, y: starY, w: 40, h: 40};
         }
