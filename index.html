@@ -23,7 +23,7 @@ body {
 </style>
 </head>
 <body>
-<button id="startBtn">Start</button>
+<button id="startBtn">Start1</button>
 
 <script>
 function isMobile() {
@@ -113,17 +113,28 @@ function startMarioGame(autoStart = false) {
   function updateCanvasSize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    // Position verticale de Mario et skate au centre de l'écran
-    marioY = canvas.height / 2;
-    // Ajustement taille sol selon mobile
-    groundY = canvas.height / 2 + (isMobile() ? 50 : 100);
+
+    if(isMobile()){
+      // Mobile → centre vertical + agrandi
+      groundY = canvas.height/2 + 50;
+      marioY = groundY - 80; // plus grand et saut plus haut
+    } else {
+      // PC → sol en bas
+      groundY = canvas.height - 100;
+      marioY = groundY - 50;
+    }
   }
   let groundY;
   updateCanvasSize();
   window.addEventListener("resize", updateCanvasSize);
   window.addEventListener("orientationchange", updateCanvasSize);
 
-  function jump() { if(!jumping) { marioVY = -16; jumping = true; } }
+  function jump() { 
+    if(!jumping) { 
+      marioVY = isMobile() ? -20 : -16; // saut plus haut sur mobile
+      jumping = true; 
+    } 
+  }
 
   function getObstacleHeight() {
     let maxHeight = 65;
@@ -159,8 +170,8 @@ function startMarioGame(autoStart = false) {
     ctx.fillRect(0, groundY, canvas.width, 10);
 
     // === Mario + Skate ===
-    const marioSize = isMobile() ? 70 : 50;
-    const skateSize = isMobile() ? {w: 80, h: 30} : {w: 65, h: 25};
+    const marioSize = isMobile() ? 90 : 50;
+    const skateSize = isMobile() ? {w: 100, h: 35} : {w: 65, h: 25};
     const marioX = 100;
 
     if(paused){
@@ -215,7 +226,6 @@ function startMarioGame(autoStart = false) {
         ctx.fill();
       }
 
-      // collision Mario
       if(!invincible && !paused && marioX+marioSize>ob.x && marioX<ob.x+ob.w && marioY+marioSize>ob.y){
         paused = true;
         deathAnimationY=0;
