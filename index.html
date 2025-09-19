@@ -23,7 +23,7 @@ body {
 </style>
 </head>
 <body>
-<button id="startBtn">Start1</button>
+<button id="startBtn">Start</button>
 
 <script>
 function isMobile() {
@@ -131,7 +131,7 @@ function startMarioGame(autoStart = false) {
 
   function jump() { 
     if(!jumping) { 
-      marioVY = isMobile() ? -20 : -16; // saut plus haut sur mobile
+      marioVY = isMobile() ? -17.5 : -16.5; // saut plus haut sur mobile
       jumping = true; 
     } 
   }
@@ -171,7 +171,7 @@ function startMarioGame(autoStart = false) {
 
     // === Mario + Skate ===
     const marioSize = isMobile() ? 90 : 50;
-    const skateSize = isMobile() ? {w: 100, h: 35} : {w: 65, h: 25};
+    const skateSize = isMobile() ? {w: 117, h: 45} : {w: 65, h: 25};
     const marioX = 100;
 
     if(paused){
