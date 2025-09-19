@@ -39,10 +39,24 @@ function startMarioGame(autoStart = false) {
 
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
   const ctx = canvas.getContext("2d");
   ctx.imageSmoothingEnabled = true;
+
+  // Détection mobile
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  // Dimensions adaptées selon appareil
+  function resizeCanvas() {
+    if (isMobile) {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    } else {
+      canvas.width = 800;   // dimensions PC
+      canvas.height = 400;
+    }
+  }
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
 
   // === HUD ===
   const scoreEl = document.createElement("div");
@@ -50,7 +64,7 @@ function startMarioGame(autoStart = false) {
   scoreEl.style.top = "10px";
   scoreEl.style.left = "20px";
   scoreEl.style.fontFamily = "monospace";
-  scoreEl.style.fontSize = "30px";
+  scoreEl.style.fontSize = isMobile ? "20px" : "30px";
   scoreEl.style.color = "#000";
   scoreEl.textContent = "Score: 0";
   document.body.appendChild(scoreEl);
@@ -60,7 +74,7 @@ function startMarioGame(autoStart = false) {
   timerEl.style.top = "10px";
   timerEl.style.right = "20px";
   timerEl.style.fontFamily = "monospace";
-  timerEl.style.fontSize = "30px";
+  timerEl.style.fontSize = isMobile ? "20px" : "30px";
   timerEl.style.color = "#000";
   timerEl.textContent = "0.00 sec";
   document.body.appendChild(timerEl);
@@ -71,7 +85,7 @@ function startMarioGame(autoStart = false) {
   levelEl.style.left = "50%";
   levelEl.style.transform = "translateX(-50%)";
   levelEl.style.fontFamily = "monospace";
-  levelEl.style.fontSize = "30px";
+  levelEl.style.fontSize = isMobile ? "20px" : "30px";
   levelEl.style.color = "#000";
   levelEl.textContent = "Level 1";
   document.body.appendChild(levelEl);
@@ -83,37 +97,29 @@ function startMarioGame(autoStart = false) {
   const starImg = new Image(); starImg.src = "super_star.png";
   const skateboardImg = new Image(); skateboardImg.src = "skateboard.png";
 
-  let marioY = canvas.height - 150;
-  let marioVY = 0;
-  let jumping = false;
+  // Variables
+  let groundY, marioY, marioVY = 0, jumping = false;
   const obstacles = [];
-  let obstacleSpeed = 5;
-  let frameCount = 0;
-  let score = 0;
-  let gameStarted = false;
-  let startTime = 0;
-  let paused = false;
-  let deathAnimationY = 0;
-  let deathAnimationVY = -10;
-  const groundY = canvas.height - 100;
-
-  let level = 1;
-  let nextAccelerationDelay = 15000 + Math.random() * 5000;
-  let lastAccelerationTime = 0;
-
-  // === Star / Invincible ===
-  let star = null;
-  let invincible = false;
-  let invincibleStartTime = 0;
-  let starFloatOffset = 0;
-  let starFloatDirection = 1;
-  let starSpawnedThisLevel = false;
-
-  // === Obstacles distance fixe ===
+  let obstacleSpeed = 5, frameCount = 0, score = 0;
+  let gameStarted = false, startTime = 0, paused = false;
+  let deathAnimationY = 0, deathAnimationVY = -10;
+  let level = 1, nextAccelerationDelay, lastAccelerationTime;
+  let star = null, invincible = false, invincibleStartTime = 0;
+  let starFloatOffset = 0, starFloatDirection = 1, starSpawnedThisLevel = false;
   const obstacleSpacing = 650;
 
+  function initVariables() {
+    groundY = canvas.height - (isMobile ? 80 : 100);
+    marioY = groundY - 50;
+    nextAccelerationDelay = 15000 + Math.random() * 5000;
+    lastAccelerationTime = performance.now();
+  }
+  initVariables();
+
+  // === Jump ===
   function jump() { if(!jumping) { marioVY = -16; jumping = true; } }
 
+  // === Obstacle height ===
   function getObstacleHeight() {
     let maxHeight = 65;
     let minHeight = 30;
@@ -133,17 +139,23 @@ function startMarioGame(autoStart = false) {
     }
   }
 
-  canvas.addEventListener("click", () => { if(gameStarted && !paused) jump(); });
-  window.addEventListener("keydown", e => { if(e.code==="Space" && gameStarted && !paused) jump(); });
+  // === Contrôles tactiles ===
+  if(isMobile){
+    canvas.addEventListener("touchstart", (e) => { if(gameStarted && !paused) jump(); });
+  } else {
+    canvas.addEventListener("click", () => { if(gameStarted && !paused) jump(); });
+    window.addEventListener("keydown", e => { if(e.code==="Space" && gameStarted && !paused) jump(); });
+  }
 
+  // === Game loop ===
   function gameLoop() {
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    // === sol ===
+    // sol
     ctx.fillStyle = "#000";
-    ctx.fillRect(0, groundY, canvas.width, 10);
+    ctx.fillRect(0, groundY, canvas.width, isMobile ? 8 : 10);
 
-    // === Mario + Skate ===
+    // Mario + skate
     if(paused){
       deathAnimationVY += 0.5;
       deathAnimationY += deathAnimationVY;
@@ -153,37 +165,19 @@ function startMarioGame(autoStart = false) {
       marioY += marioVY;
       if(marioY > groundY-50){ marioY=groundY-50; marioVY=0; jumping=false; }
       ctx.drawImage(jumping?marioJump:marioStand, 100, marioY, 50,50);
-
-      // skate affiché sous Mario (10px en dessous)
       ctx.drawImage(skateboardImg, 90, groundY-18, 65, 25);
     }
 
-    // === spawn obstacles ===
+    // Spawn obstacles
     if(!paused){
       if(obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - obstacleSpacing){
         const height = getObstacleHeight();
         const type = Math.random() < 0.3 ? "triangle" : "square";
-        // décollé du sol de 15px
         obstacles.push({x: canvas.width, y: groundY - height - 15, w: 30, h: height, type: type});
       }
     }
 
-    // === spawn star ===
-    if(level >= 2 && !star && !starSpawnedThisLevel){
-        if(Math.random() < 0.8){
-            let starY;
-            if(obstacles.length > 0 && Math.random() < 0.5){
-                const ob = obstacles[Math.floor(Math.random()*obstacles.length)];
-                starY = ob.y - 40; 
-            } else {
-                starY = groundY - 50 - Math.random()*150; 
-            }
-            star = {x: canvas.width, y: starY, w: 40, h: 40};
-        }
-        starSpawnedThisLevel = true; 
-    }
-
-    // === dessiner obstacles ===
+    // Dessiner obstacles
     ctx.fillStyle="#000";
     for(let i=obstacles.length-1;i>=0;i--){
       const ob = obstacles[i];
@@ -231,7 +225,7 @@ function startMarioGame(autoStart = false) {
       if(ob.x+ob.w<0){ obstacles.splice(i,1); score++; }
     }
 
-    // === dessiner star ===
+    // Dessiner star
     if(star){
       if(!paused){
         star.x -= obstacleSpeed;
@@ -252,7 +246,7 @@ function startMarioGame(autoStart = false) {
       if(star && star.x+star.w<0) star=null;
     }
 
-    // === invincible timer ===
+    // Invincible timer
     if(invincible){
       const elapsedInv = performance.now() - invincibleStartTime;
       if(elapsedInv >= 14000){
@@ -262,7 +256,7 @@ function startMarioGame(autoStart = false) {
       }
     }
 
-    // === accélération et niveau ===
+    // Accélération et niveau
     if(!paused && gameStarted){
       const now = performance.now();
       if(now - lastAccelerationTime >= nextAccelerationDelay){
@@ -277,7 +271,7 @@ function startMarioGame(autoStart = false) {
       }
     }
 
-    // === mise à jour HUD ===
+    // Mise à jour HUD
     scoreEl.textContent = "Score: " + score;
     const elapsed = paused ? (timerEl.textContent?parseFloat(timerEl.textContent):0)
                            : (performance.now()-startTime)/1000;
