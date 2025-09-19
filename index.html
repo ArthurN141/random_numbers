@@ -23,7 +23,7 @@ body {
 </style>
 </head>
 <body>
-<button id="startBtn">Start1</button>
+<button id="startBtn">Start</button>
 
 <script>
 function isMobile() {
@@ -131,7 +131,7 @@ function startMarioGame(autoStart = false) {
 
   function jump() { 
     if(!jumping) { 
-      marioVY = isMobile() ? -17.35 : -16.35; // saut plus haut sur mobile
+      marioVY = isMobile() ? -17.5 : -16.35; // saut plus haut sur mobile
       jumping = true; 
     } 
   }
