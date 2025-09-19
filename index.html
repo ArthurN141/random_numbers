@@ -41,6 +41,18 @@ function startMarioGame(autoStart = false) {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = true; // améliore les formes dessinées
+
+  // === HUD texte net ===
+  const scoreEl = document.createElement("div");
+  scoreEl.style.position = "fixed";
+  scoreEl.style.top = "10px";
+  scoreEl.style.left = "20px";
+  scoreEl.style.fontFamily = "monospace";
+  scoreEl.style.fontSize = "30px";
+  scoreEl.style.color = "#000";
+  scoreEl.textContent = "Score: 0";
+  document.body.appendChild(scoreEl);
 
   const timerEl = document.createElement("div");
   timerEl.style.position = "fixed";
@@ -49,12 +61,13 @@ function startMarioGame(autoStart = false) {
   timerEl.style.fontFamily = "monospace";
   timerEl.style.fontSize = "30px";
   timerEl.style.color = "#000";
+  timerEl.textContent = "0.00 sec";
   document.body.appendChild(timerEl);
 
   const levelEl = document.createElement("div");
   levelEl.style.position = "fixed";
-  levelEl.style.top = "20px";             // juste sous le haut de l'écran
-  levelEl.style.left = "50%";             // centré horizontalement
+  levelEl.style.top = "10px";
+  levelEl.style.left = "50%";
   levelEl.style.transform = "translateX(-50%)";
   levelEl.style.fontFamily = "monospace";
   levelEl.style.fontSize = "30px";
@@ -62,6 +75,7 @@ function startMarioGame(autoStart = false) {
   levelEl.textContent = "Level 1";
   document.body.appendChild(levelEl);
 
+  // === Mario sprites ===
   const marioStand = new Image(); marioStand.src = "super_mario.png";
   const marioJump = new Image(); marioJump.src = "super_mario_jump.png";
   const marioDeath = new Image(); marioDeath.src = "super_mario_death.png";
@@ -87,10 +101,9 @@ function startMarioGame(autoStart = false) {
   function jump() { if(!jumping) { marioVY = -15; jumping = true; } }
 
   function getObstacleHeight() {
-    // probabilité d'obstacle haut augmente tous les 2 niveaux
     let maxHeight = 70;
     let minHeight = 30;
-    let highProb = Math.min(0.3 + 0.05 * Math.floor(level/2), 0.7); // plafonné à 70%
+    let highProb = Math.min(0.3 + 0.05 * Math.floor(level/2), 0.7);
     if(Math.random() < highProb){
       return Math.floor(Math.random()*(maxHeight-50)+50); // haut
     } else {
@@ -113,12 +126,13 @@ function startMarioGame(autoStart = false) {
   window.addEventListener("keydown", e => { if(e.code==="Space" && gameStarted && !paused) jump(); });
 
   function gameLoop() {
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0,0,canvas.width,canvas.height); // canvas nettoyé
 
+    // === sol ===
     ctx.fillStyle = "#000";
     ctx.fillRect(0, groundY, canvas.width, 10);
 
+    // === Mario ===
     if(paused){
       deathAnimationVY += 0.5;
       deathAnimationY += deathAnimationVY;
@@ -130,27 +144,31 @@ function startMarioGame(autoStart = false) {
       ctx.drawImage(jumping?marioJump:marioStand, 100, marioY, 50,50);
     }
 
+    // === spawn obstacles ===
     if(!paused && frameCount%120===0){
       const height = getObstacleHeight();
-      const type = Math.random() < 0.3 ? "triangle" : "square"; // 30% de chance d'être un triangle
+      const type = Math.random() < 0.3 ? "triangle" : "square"; // 30% triangles
       obstacles.push({x:canvas.width, y:groundY-height, w:30, h:height, type: type});
     }
 
+    // === dessiner obstacles ===
     ctx.fillStyle="#000";
     for(let i=obstacles.length-1;i>=0;i--){
       const ob = obstacles[i];
       if(!paused) ob.x -= obstacleSpeed;
+
       if(ob.type === "square"){
-        ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
+        ctx.fillRect(ob.x + 0.5, ob.y + 0.5, ob.w, ob.h);
       } else if(ob.type === "triangle"){
         ctx.beginPath();
-        ctx.moveTo(ob.x, ob.y + ob.h);       // bas gauche
-        ctx.lineTo(ob.x + ob.w / 2, ob.y);   // sommet
-        ctx.lineTo(ob.x + ob.w, ob.y + ob.h); // bas droit
+        ctx.moveTo(ob.x + 0.5, ob.y + ob.h + 0.5);
+        ctx.lineTo(ob.x + ob.w/2, ob.y);
+        ctx.lineTo(ob.x + ob.w, ob.y + ob.h + 0.5);
         ctx.closePath();
         ctx.fill();
       }
 
+      // === collision Mario ===
       if(!paused && 100+50>ob.x && 100<ob.x+ob.w && marioY+50>ob.y){
         paused = true;
         deathAnimationY=0;
@@ -180,6 +198,7 @@ function startMarioGame(autoStart = false) {
       if(ob.x+ob.w<0){ obstacles.splice(i,1); score++; }
     }
 
+    // === accélération et niveau ===
     if(!paused && gameStarted){
       const now = performance.now();
       if(now - lastAccelerationTime >= nextAccelerationDelay){
@@ -193,16 +212,11 @@ function startMarioGame(autoStart = false) {
       }
     }
 
-    ctx.fillStyle="#000";
-    ctx.font="30px monospace";
-    ctx.fillText("Score: "+score, 20,50);
-
+    // === mise à jour HUD ===
+    scoreEl.textContent = "Score: " + score;
     const elapsed = paused ? (timerEl.textContent?parseFloat(timerEl.textContent):0)
                            : (performance.now()-startTime)/1000;
     timerEl.textContent = elapsed.toFixed(2)+" sec";
-
-    ctx.font="20px monospace";
-    ctx.fillText("No Internet Connection",20,canvas.height-20);
 
     frameCount++;
     requestAnimationFrame(gameLoop);
