@@ -23,7 +23,7 @@ body {
 </style>
 </head>
 <body>
-<button id="startBtn">Start</button>
+<button id="startBtn">Start1</button>
 
 <script>
 function isMobile() {
@@ -131,7 +131,7 @@ function startMarioGame(autoStart = false) {
 
   function jump() { 
     if(!jumping) { 
-      marioVY = isMobile() ? -17.5 : -16.5; // saut plus haut sur mobile
+      marioVY = isMobile() ? -17.35 : -16.35; // saut plus haut sur mobile
       jumping = true; 
     } 
   }
@@ -171,8 +171,12 @@ function startMarioGame(autoStart = false) {
 
     // === Mario + Skate ===
     const marioSize = isMobile() ? 90 : 50;
-    const skateSize = isMobile() ? {w: 117, h: 45} : {w: 65, h: 25};
+    const skateSize = isMobile() ? {w: 130, h: 50} : {w: 65, h: 25};
     const marioX = 100;
+
+    // Définir position du skate selon mobile ou PC
+    const skateX = isMobile() ? marioX - 10 : marioX - 10;
+    const skateY = isMobile() ? groundY - 10 : groundY - 18;
 
     if(paused){
       deathAnimationVY += 0.5;
@@ -183,7 +187,7 @@ function startMarioGame(autoStart = false) {
       marioY += marioVY;
       if(marioY > groundY-marioSize){ marioY=groundY-marioSize; marioVY=0; jumping=false; }
       ctx.drawImage(jumping?marioJump:marioStand, marioX, marioY, marioSize, marioSize);
-      ctx.drawImage(skateboardImg, marioX-10, groundY-18, skateSize.w, skateSize.h);
+      ctx.drawImage(skateboardImg, skateX, skateY, skateSize.w, skateSize.h);
     }
 
     // === spawn obstacles ===
