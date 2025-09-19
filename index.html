@@ -52,6 +52,7 @@ function startMarioGame(autoStart = false) {
 
   const marioStand = new Image(); marioStand.src = "super_mario.png";
   const marioJump = new Image(); marioJump.src = "super_mario_jump.png";
+  const marioDeath = new Image(); marioDeath.src = "super_mario_death.png";
 
   let marioY = canvas.height - 150;
   let marioVY = 0;
@@ -62,8 +63,10 @@ function startMarioGame(autoStart = false) {
   let score = 0;
   let gameStarted = false;
   let startTime = 0;
-  let lastAccelerationTime = 0; // pour accélération obstacles
-  let paused = false; // bloque le timer à la mort
+  let lastAccelerationTime = 0;
+  let paused = false;
+  let deathAnimationY = 0; // hauteur de l'animation
+  let deathAnimationVY = -10; // vitesse initiale du "rebond"
   const groundY = canvas.height - 100;
 
   function jump() {
@@ -91,13 +94,21 @@ function startMarioGame(autoStart = false) {
     ctx.fillStyle = "#000";
     ctx.fillRect(0, groundY, canvas.width, 10);
 
-    marioVY += 1;
-    marioY += marioVY;
-    if (marioY > groundY - 50) { marioY = groundY - 50; marioVY = 0; jumping = false; }
-    ctx.drawImage(jumping ? marioJump : marioStand, 100, marioY, 50, 50);
+    // Si pause et animation de mort
+    if(paused){
+      deathAnimationVY += 0.5; // gravité
+      deathAnimationY += deathAnimationVY;
+      ctx.drawImage(marioDeath, 100, groundY - 50 + deathAnimationY, 50, 50);
+    } else {
+      // mouvement Mario normal
+      marioVY += 1;
+      marioY += marioVY;
+      if (marioY > groundY - 50) { marioY = groundY - 50; marioVY = 0; jumping = false; }
+      ctx.drawImage(jumping ? marioJump : marioStand, 100, marioY, 50, 50);
+    }
 
     // spawn obstacles
-    if(frameCount % 120 === 0) {
+    if(!paused && frameCount % 120 === 0) {
       const height = Math.floor(Math.random()*40) + 30;
       obstacles.push({ x: canvas.width, y: groundY - height, w: 30, h: height });
     }
@@ -106,12 +117,14 @@ function startMarioGame(autoStart = false) {
     ctx.fillStyle = "#000";
     for (let i = obstacles.length - 1; i >= 0; i--) {
       const ob = obstacles[i];
-      ob.x -= obstacleSpeed;
+      if(!paused) ob.x -= obstacleSpeed;
       ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
 
       // collision
-      if (100 + 50 > ob.x && 100 < ob.x + ob.w && marioY + 50 > ob.y && !paused) {
-        paused = true; // stoppe le timer
+      if (!paused && 100 + 50 > ob.x && 100 < ob.x + ob.w && marioY + 50 > ob.y) {
+        paused = true; 
+        deathAnimationY = 0;
+        deathAnimationVY = -10;
         deathSound.currentTime = 0;
         deathSound.play();
         music.pause();
@@ -124,7 +137,6 @@ function startMarioGame(autoStart = false) {
         score = 0;
         obstacleSpeed = 5;
 
-        // redémarrage après deathSound
         deathSound.onended = () => {
           paused = false;
           startTime = performance.now();
@@ -142,7 +154,7 @@ function startMarioGame(autoStart = false) {
     // augmentation obstacleSpeed toutes les 30 sec
     if (!paused && gameStarted) {
       const now = performance.now();
-      if (now - lastAccelerationTime >= 30000) { // 30 000 ms = 30 sec
+      if (now - lastAccelerationTime >= 30000) {
         obstacleSpeed += 1;
         lastAccelerationTime = now;
       }
@@ -153,13 +165,9 @@ function startMarioGame(autoStart = false) {
     ctx.font = "30px monospace";
     ctx.fillText("Score: " + score, 20, 50);
 
-    if(gameStarted){
-      const elapsed = paused ? (timerEl.textContent ? parseFloat(timerEl.textContent) : 0)
-                             : (performance.now() - startTime) / 1000;
-      timerEl.textContent = elapsed.toFixed(2) + " sec";
-    } else {
-      timerEl.textContent = "0.00 sec";
-    }
+    const elapsed = paused ? (timerEl.textContent ? parseFloat(timerEl.textContent) : 0)
+                           : (performance.now() - startTime) / 1000;
+    timerEl.textContent = elapsed.toFixed(2) + " sec";
 
     ctx.font = "20px monospace";
     ctx.fillText("No Internet Connection", 20, canvas.height - 20);
@@ -171,7 +179,6 @@ function startMarioGame(autoStart = false) {
   if(autoStart) startGame();
 }
 
-// Bouton START
 const startBtn = document.getElementById("startBtn");
 startBtn.addEventListener("click", () => {
   startMarioGame(true);
