@@ -23,7 +23,7 @@ body {
 </style>
 </head>
 <body>
-<button id="startBtn">Start1</button>
+<button id="startBtn">Start</button>
 
 <script>
 function isMobile() {
@@ -167,7 +167,7 @@ function startMarioGame(autoStart = false) {
     ctx.fillStyle = "#000";
     ctx.fillRect(0, groundY, canvas.width, 10);
 
-    // === Mario + Skate ===
+    // === Mario + Skateboard ===
     const marioSize = isMobile() ? 90 : 50;
     const skateSize = isMobile() ? {w: 130, h: 50} : {w: 65, h: 25};
     const marioX = 100;
@@ -175,7 +175,18 @@ function startMarioGame(autoStart = false) {
     const skateY = isMobile() ? groundY - 33 : groundY - 18;
 
     // Clignotement Mario si invincible
-    const marioVisible = !invincible || (Math.floor(performance.now()/100) % 2 === 0);
+    let marioVisible = true;
+    if(invincible){
+      const elapsedInv = performance.now() - invincibleStartTime;
+      const remainingInv = 14000 - elapsedInv;
+      if(remainingInv <= 1500){
+        // dernière 1.5 sec → clignotement rapide (toutes les 50ms)
+        marioVisible = Math.floor(performance.now()/50) % 2 === 0;
+      } else {
+        // clignotement normal (toutes les 100ms)
+        marioVisible = Math.floor(performance.now()/100) % 2 === 0;
+      }
+    }
 
     if(paused){
       deathAnimationVY += 0.5;
@@ -195,20 +206,25 @@ function startMarioGame(autoStart = false) {
       if(obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - obstacleSpacing){
         const height = getObstacleHeight();
         const type = Math.random() < 0.3 ? "triangle" : "square";
-        const width = isMobile() ? 40 : 30; // plus large sur mobile
+        const width = isMobile() ? 40 : 30; // ajustable par toi
         obstacles.push({x: canvas.width, y: groundY - height - 15, w: width, h: height, type: type});
       }
     }
+
     // === spawn star ===
     if(level >= 2 && !star && !starSpawnedThisLevel){
       if(Math.random() < 0.8){
         let starY;
+        const maxStarY = groundY - 50 - 150; // hauteur max depuis le sol
         if(obstacles.length > 0 && Math.random() < 0.5){
           const ob = obstacles[Math.floor(Math.random()*obstacles.length)];
           starY = ob.y - 40; 
+          if(starY < maxStarY) starY = maxStarY; // limiter au max
         } else {
-          starY = groundY - 50 - Math.random()*150; 
+          starY = maxStarY + Math.random()*150; // hauteur libre
         }
+        // Sécuriser que l'étoile ne tombe pas sous le sol
+        if(starY + 40 > groundY) starY = groundY - 40;
         star = {x: canvas.width, y: starY, w: 40, h: 40};
       }
       starSpawnedThisLevel = true; 
@@ -240,14 +256,14 @@ function startMarioGame(autoStart = false) {
         music.currentTime=0;
         obstacles.length=0;
 
-        // Le score reste affiché jusqu'à la fin du deathSound
+        // score et niveau restent affichés jusqu'à la fin du deathSound
         deathSound.onended = ()=>{
           paused = false;
-          score = 0; // reset score après fin du son
-          level = 1; // reset niveau à 1
-          levelEl.textContent = "Level " + level; // mettre à jour l'affichage
-          obstacleSpeed = 5; // reset vitesse
-          nextAccelerationDelay = 15000 + Math.random()*5000; // reset timer accélération
+          score = 0;
+          level = 1;
+          levelEl.textContent = "Level " + level;
+          obstacleSpeed = 5;
+          nextAccelerationDelay = 15000 + Math.random()*5000;
           startTime = performance.now();
           lastAccelerationTime = performance.now();
           music.play().catch(()=>{});
@@ -266,6 +282,7 @@ function startMarioGame(autoStart = false) {
       }
       ctx.drawImage(starImg, star.x, star.y + starFloatOffset, star.w, star.h);
 
+      // collision étoile
       if(marioX+marioSize>star.x && marioX<star.x+star.w && marioY+marioSize>star.y+starFloatOffset && marioY<star.y+starFloatOffset+star.h){
         invincible = true;
         invincibleStartTime = performance.now();
