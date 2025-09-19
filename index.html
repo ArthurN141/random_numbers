@@ -177,7 +177,7 @@ function startMarioGame(autoStart = false) {
         level++;
         levelEl.textContent = "Level "+level;
         powerUpSound.currentTime = 0;
-        powerUpSound.play().catch()=>{});
+        powerUpSound.play().catch(()=>{});
         lastAccelerationTime = now;
         nextAccelerationDelay = 15000 + Math.random()*5000;
       }
