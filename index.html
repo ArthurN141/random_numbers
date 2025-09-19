@@ -1,326 +1,162 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Random Number Generator</title>
-<style>
-  * { box-sizing: border-box; }
-  body {
-    font-family: monospace;
-    background: #111;
-    color: #0f0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    overflow: hidden;
-  }
-  /* Box initiale plus petite */
-  .initial-container {
-    background: #000;
-    padding: 30px;
-    border-radius: 10px;
-    text-align: center;
-    width: 500px; /* I know you are stalking my code since its public 👀👀👀👀👀 */
-    max-height: 90vh;
-    overflow: hidden;
-    box-shadow: 0 0 20px #0f0;
-  }
-  /* Box pour erreurs */
-  .container {
-    width: 350px; /* largeur pour erreurs */
-  }
-  input, button {
-    font-family: monospace;
-    margin-bottom: 10px;
-    padding: 8px;
-    width: 100%;
-    display: block;
-    appearance: none; -webkit-appearance: none; -moz-appearance: none;
-    border-radius: 5px;
-  }
-  input {
-    border: 1px solid #0f0;
-    background: #111;
-    color: #0f0;
-  }
-  button {
-    cursor: pointer;
-    background: #e63946;
-    color: white;
-    border: none; /* plus de contour vert */
-  }
-  .progress-bar {
-    margin-top: 15px;
-    width: 100%;
-    height: 10px;
-    background: #222;
-    border-radius: 5px;
-    overflow: hidden;
-    display: none;
-  }
-  .progress {
-    height: 100%;
-    width: 0%;
-    background: #e63946;
-    transition: width 0.1s linear;
-  }
-  .result {
-    margin-top: 20px;
-    text-align: left;
-    font-size: 14px;
-    max-height: 400px;
-    overflow-y: auto;
-  }
-  @keyframes popupGrow {
-    0%   { transform: translate(-50%, -50%) scale(0.9); }
-    100% { transform: translate(-50%, -50%) scale(1.1); }
-  }
-  .popup {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(1); /* scale initial */
-    background: #e63946;
-    color: #fff;
-    padding: 25px 45px;
-    font-size: 25px;
-    font-weight: bold;
-    border-radius: 10px;
-    display: none;
-    z-index: 999;
-    box-shadow: 0 0 30px #fff;
-    text-align: center;
-    pointer-events: none;
-  }
-  @keyframes fallDown {
-    0%   { transform: translateY(0); opacity: 1; }
-    100% { transform: translateY(100vh); opacity: 0; }
-  }
-  .fall {
-    animation: fallDown 2s forwards;
-  }
-  #audio-toggle {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    font-size: 24px;
-    color: #0f0;
-    cursor: pointer;
-    user-select: none;
-    z-index: 1000;
-  }
-  #clock {
-    position: fixed;
-    top: 10px;
-    right: 15px;
-    font-size: 16px;
-    color: #0f0;
-  }
-  #bottom-left, #bottom-right {
-    position: fixed;
-    bottom: 10px;
-    font-size: 14px;
-    color: #0f0;
-  }
-  #bottom-left { left: 15px; }
-  #bottom-right { right: 15px; }
-  #bottom-right a { color: #0f0; text-decoration: none; }
-  #bottom-right a:hover { text-decoration: underline; }
-</style>
+  <meta charset="UTF-8">
+  <title>Mario Game Start</title>
+  <style>
+    body {
+      margin: 0;
+      background: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #startBtn {
+      font-size: 40px;
+      padding: 20px 40px;
+      border: 3px solid #000;
+      background: #fff;
+      cursor: pointer;
+      z-index: 1000;
+    }
+  </style>
 </head>
 <body>
-<audio id="bg-music" src="let_him_cook.m4a" loop></audio>
-<div id="audio-toggle">🔊</div>
-<div id="clock"></div>
-<div id="bottom-left">v1.1.0</div>
-<div id="bottom-right"><a href="https://discord.gg/PwjE47CA6t" target="_blank">We Want To Count</a></div>
+  <button id="startBtn">Start</button>
 
-<!-- box initiale plus petite -->
-<div class="container initial-container" id="container">
-  <h1>Generate Random Numbers</h1>
-  <input type="number" id="from" placeholder="From">
-  <input type="number" id="to" placeholder="To">
-  <button onclick="fakeGenerate()">Generate</button>
-  <div class="progress-bar">
-    <div class="progress" id="progress"></div>
-  </div>
-  <div class="result" id="result"></div>
-</div>
+  <script>
+    function startMarioGame(musicObj = null, autoStart = false){
+      // ensure backgrounds
+      document.documentElement.style.background = "#fff";
+      document.body.style.background = "#fff";
+      document.body.innerHTML = ""; // replace page content
 
-<div class="popup" id="popup">⚠️ WARNING 451 Critical errors detected !</div>
+      const canvas = document.createElement("canvas");
+      document.body.appendChild(canvas);
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const ctx = canvas.getContext("2d");
 
-<script>
-const bgMusic = document.getElementById("bg-music");
-const audioToggle = document.getElementById("audio-toggle");
-function startMusic() { if(bgMusic.paused) bgMusic.play().catch(err=>console.log(err)); }
-audioToggle.addEventListener("click",()=>{ bgMusic.muted=!bgMusic.muted; audioToggle.textContent=bgMusic.muted?"🔇":"🔊"; });
+      // timer
+      const timerEl = document.createElement("div");
+      timerEl.style.position = "fixed";
+      timerEl.style.top = "10px";
+      timerEl.style.right = "20px";
+      timerEl.style.fontFamily = "monospace";
+      timerEl.style.fontSize = "30px";
+      timerEl.style.color = "#000";
+      document.body.appendChild(timerEl);
 
-function updateClock(){
-  const now=new Date();
-  const dateStr=now.toLocaleDateString();
-  const timeStr=now.toLocaleTimeString();
-  const el=document.getElementById("clock");
-  if(el) el.textContent=dateStr+" "+timeStr;
-}
-setInterval(updateClock,1000);
-updateClock();
+      const marioStand = new Image(); marioStand.src = "super_mario.png";
+      const marioJump  = new Image(); marioJump.src  = "super_mario_jump.png";
 
-let finalNumber=null;
+      const music = musicObj || new Audio("rainbow_ride_music.m4a");
+      music.loop = true;
+      const deathSound = new Audio("mario_death.m4a");
 
-function fakeGenerate(){
-  startMusic();
-  const resultElement=document.getElementById("result");
-  const progressBar=document.querySelector(".progress-bar");
-  const progress=document.getElementById("progress");
-  const fromVal=parseInt(document.getElementById("from").value);
-  const toVal=parseInt(document.getElementById("to").value);
+      let marioY = canvas.height - 150;
+      let marioVY = 0;
+      let jumping = false;
+      const obstacles = [];
+      let obstacleSpeed = 5;
+      let frameCount = 0;
+      let score = 0;
+      let gameStarted = false;
+      let startTime = 0;
 
-  finalNumber = (!isNaN(fromVal)&&!isNaN(toVal)&&fromVal<toVal)
-    ? Math.floor(Math.random()*(toVal-fromVal+1))+fromVal
-    : null;
-
-  resultElement.innerHTML="";
-  progressBar.style.display="block";
-  progress.style.width="0%";
-
-  let dots="";
-  const dotInterval=setInterval(()=>{
-    dots=dots.length<3?dots+".":"";
-    const cpuUsage=Math.floor(Math.random()*(85-79+1))+79;
-    resultElement.innerHTML=`Processing${dots} (using ${cpuUsage}% of CPU)`;
-  },500);
-
-  let tick=0;
-  const totalTicks=40;
-  const increment=100/totalTicks;
-  const barInterval=setInterval(()=>{
-    if(tick>=totalTicks){ clearInterval(barInterval); clearInterval(dotInterval); startErrorScroll(); }
-    else progress.style.width=(increment*++tick)+"%";
-  },100);
-}
-
-function startErrorScroll(){
-  const container=document.getElementById("container");
-  const resultElement=document.getElementById("result");
-  const popup=document.getElementById("popup");
-
-  // cacher les champs et agrandir la box pour erreurs
-  container.querySelectorAll('input, button, h1').forEach(el=>el.style.display='none');
-  container.style.width="450px"; // largeur pour erreurs
-
-  const errorTemplates=[
-    "Error: Failed to allocate memory at 0x0042FFAA",
-    "Warning: Unknown HTML tag detected",
-    "Fatal: Stack overflow in process #22",
-    "Error: Cannot read property 'undefined' of null",
-    "Warning: CPU temperature exceeded safe limit",
-    "Error: Disk read failure",
-    "Warning: Deprecated API call detected",
-    "Error: Unexpected token '<' in JSON",
-    "Error: Out of memory",
-    "Warning: High CPU usage detected",
-    "Error: Network timeout while connecting to 127.0.0.1",
-    "Error: Critical system file missing",
-    "Warning: Invalid pointer reference",
-    "Error: SyntaxError in line 42"
-  ];
-
-  const PRE_POPUP_MS=4000, TOTAL_SCROLL_MS=8000, LINES=400;
-  const errors=Array.from({length:LINES},()=>errorTemplates[Math.floor(Math.random()*errorTemplates.length)]);
-  let index=0;
-  const intervalTime=TOTAL_SCROLL_MS/LINES;
-
-  setTimeout(() => {
-    popup.style.display = "block";
-    popup.style.animation = "popupGrow 4s forwards";
-  }, PRE_POPUP_MS);
-
-  const scrollInterval=setInterval(()=>{
-    if(index<errors.length){
-      resultElement.innerHTML+=errors[index]+"<br>";
-      resultElement.scrollTop=resultElement.scrollHeight;
-      index++;
-    } else { clearInterval(scrollInterval); show404(); }
-  }, intervalTime);
-}
-function show404() {
-  // Crée les éléments finaux
-  document.body.innerHTML = `
-    <div id="error-screen" style="color:#f00; text-align:center; font-family:monospace;">
-      <h1 id="error-text" style="cursor:pointer;">404 Not Found</h1>
-      <p id="click-text" style="cursor:pointer;">The page you are looking for does not exist;</p>
-    </div>
-  `;
-  document.body.style.background = "#000";
-
-  // --- Musique pour 404 ---
-  const strangerMusic = new Audio("stranger_things.m4a");
-
-  // Texte "404 Not Found"
-  const errorEl = document.getElementById("error-text");
-  errorEl.dataset.clicked = 0;  // 0 = pas encore cliqué, 1 = affiché, 2 = tombé
-
-  errorEl.addEventListener("click", () => {
-    if (strangerMusic.paused) strangerMusic.play();
-    if (parseInt(errorEl.dataset.clicked) === 0) {
-      // premier clic : affiche le nombre ou ERROR
-      errorEl.textContent = (finalNumber !== null) ? String(finalNumber) : "ERROR";
-      errorEl.dataset.clicked = 1;
-    } else if (parseInt(errorEl.dataset.clicked) === 1) {
-      // deuxième clic : fait tomber le texte
-      errorEl.dataset.clicked = 2;
-      errorEl.classList.add("fall");
-      // si le texte du bas est déjà affiché et pas encore en zoom, démarrer zoom
-      if (parseInt(clickEl.dataset.step) > 0 && !clickZoomInterval) {
-        startClickZoom();
+      function jump(){
+        if(!jumping){ marioVY = -15; jumping = true; }
       }
-    }
-  });
 
-  // Texte "Hello World"
-  const clickEl = document.getElementById("click-text");
-  const helloSteps = [
-    "Hello World",
-    'print("Hello World")',
-    'HelloWorld("print")',
-    '(hell_oworld)"print"'
-  ];
-  clickEl.dataset.step = 0;
-  clickEl.dataset.scale = 1;
-  let clickZoomInterval = null;
-
-  function startClickZoom() {
-    // Zoom à partir de la position actuelle, garde le texte en flux normal
-    clickZoomInterval = setInterval(() => {
-      let scale = parseFloat(clickEl.dataset.scale) + 0.01;
-      clickEl.dataset.scale = scale;
-      clickEl.style.transform = `scale(${scale})`;
-    }, 50);
-  }
-
-  clickEl.addEventListener("click", () => {
-    const errorFallen = parseInt(errorEl.dataset.clicked) === 2;
-    let step = parseInt(clickEl.dataset.step);
-
-    if (step < helloSteps.length) {
-      clickEl.textContent = helloSteps[step];
-      clickEl.dataset.step = step + 1;
-
-      // démarrer zoom automatiquement si le texte du haut est tombé
-      if (errorFallen && !clickZoomInterval) {
-        startClickZoom();
+      function startGame(){
+        if(!gameStarted){
+          gameStarted = true;
+          startTime = performance.now();
+          try { music.currentTime = 0; music.play().catch(()=>{}); } catch(e){}
+          gameLoop();
+        }
       }
-    } else {
-      // dernière étape : tombe en conservant la taille actuelle
-      clickEl.classList.add("fall");
-      if (clickZoomInterval) clearInterval(clickZoomInterval);
-    }
-  });
-}
 
-</script>
+      // controls
+      canvas.addEventListener("click", ()=>{ if(gameStarted) jump(); });
+      window.addEventListener("keydown", e => { if(e.code === "Space" && gameStarted) jump(); });
+
+      function gameLoop(){
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const groundY = canvas.height - 100;
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, groundY, canvas.width, 10);
+
+        marioVY += 1;
+        marioY += marioVY;
+        if(marioY > groundY - 50){ marioY = groundY - 50; marioVY = 0; jumping = false; }
+        ctx.drawImage(jumping ? marioJump : marioStand, 100, marioY, 50, 50);
+
+        // spawn obstacles
+        if(frameCount % 120 === 0){
+          const height = Math.floor(Math.random()*40) + 30;
+          obstacles.push({ x: canvas.width, y: groundY - height, w: 30, h: height });
+        }
+
+        // move & collisions
+        ctx.fillStyle = "#000";
+        for(let i = obstacles.length - 1; i >= 0; i--){
+          const ob = obstacles[i];
+          ob.x -= obstacleSpeed;
+          ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
+
+          if(100 + 50 > ob.x && 100 < ob.x + ob.w && marioY + 50 > ob.y){
+            // death
+            deathSound.play();
+            try { music.pause(); } catch(e){}
+            obstacles.length = 0;
+            marioY = groundY - 50;
+            marioVY = 0;
+            jumping = false;
+            score = 0;
+            obstacleSpeed = 5;
+            startTime = performance.now();
+            try { music.currentTime = 0; music.play().catch(()=>{}); } catch(e){}
+          }
+
+          if(ob.x + ob.w < 0){
+            obstacles.splice(i,1);
+            score++;
+          }
+        }
+
+        // HUD
+        ctx.fillStyle = "#000";
+        ctx.font = "30px monospace";
+        ctx.fillText("Score: " + score, 20, 50);
+
+        if(gameStarted){
+          const elapsed = (performance.now() - startTime) / 1000;
+          timerEl.textContent = elapsed.toFixed(2) + " sec";
+        } else {
+          timerEl.textContent = "0.00 sec";
+        }
+
+        ctx.font = "20px monospace";
+        ctx.fillText("No Internet Connection", 20, canvas.height - 20);
+
+        frameCount++;
+        requestAnimationFrame(gameLoop);
+      }
+
+      if(autoStart) startGame();
+    }
+
+    // --- bouton start ---
+    const startBtn = document.getElementById("startBtn");
+    startBtn.addEventListener("click", () => {
+      const supermarioMusic = new Audio("rainbow_ride_music.m4a");
+      supermarioMusic.loop = true;
+      startMarioGame(supermarioMusic, true);
+    });
+  </script>
 </body>
 </html>
