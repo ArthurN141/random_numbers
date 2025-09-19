@@ -73,7 +73,17 @@
         if(!gameStarted){
           gameStarted = true;
           startTime = performance.now();
-          try { music.currentTime = 0; music.play().catch(()=>{}); } catch(e){}
+          try {
+            music.currentTime = 0;
+            console.log("Trying to play music...");
+            music.play().then(() => {
+              console.log("Music started successfully ✅");
+            }).catch(err => {
+              console.error("Music failed to play ❌:", err);
+            });
+          } catch(e){
+            console.error("Music error:", e);
+          }
           gameLoop();
         }
       }
@@ -119,7 +129,10 @@
             score = 0;
             obstacleSpeed = 5;
             startTime = performance.now();
-            try { music.currentTime = 0; music.play().catch(()=>{}); } catch(e){}
+            try { 
+              music.currentTime = 0; 
+              music.play().catch(err => console.error("Music replay failed:", err)); 
+            } catch(e) { console.error("Replay error:", e); }
           }
 
           if(ob.x + ob.w < 0){
@@ -155,7 +168,17 @@
     startBtn.addEventListener("click", () => {
       const supermarioMusic = new Audio("rainbow_ride_music.m4a");
       supermarioMusic.loop = true;
-      startMarioGame(supermarioMusic, true);
+
+      console.log("Start button clicked, initializing game...");
+      supermarioMusic.play().then(() => {
+        console.log("Pre-play test ✅: music can be played");
+        supermarioMusic.pause();
+        supermarioMusic.currentTime = 0;
+        startMarioGame(supermarioMusic, true);
+      }).catch(err => {
+        console.error("Pre-play test ❌: music failed before game:", err);
+        startMarioGame(null, true);
+      });
     });
   </script>
 </body>
