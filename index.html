@@ -76,7 +76,7 @@ function startMarioGame(autoStart = false) {
   levelEl.textContent = "Level 1";
   document.body.appendChild(levelEl);
 
-  // === Mario sprites ===
+  // === Mario & Star Sprites ===
   const marioStand = new Image(); marioStand.src = "super_mario.png";
   const marioJump = new Image(); marioJump.src = "super_mario_jump.png";
   const marioDeath = new Image(); marioDeath.src = "super_mario_death.png";
@@ -100,12 +100,13 @@ function startMarioGame(autoStart = false) {
   let nextAccelerationDelay = 15000 + Math.random() * 5000;
   let lastAccelerationTime = 0;
 
-  // === Star invincible ===
+  // === Star / Invincible ===
   let star = null;
   let invincible = false;
   let invincibleStartTime = 0;
   let starFloatOffset = 0;
   let starFloatDirection = 1;
+  let starSpawnedThisLevel = false;
 
   function jump() { if(!jumping) { marioVY = -15; jumping = true; } }
 
@@ -150,22 +151,28 @@ function startMarioGame(autoStart = false) {
       ctx.drawImage(jumping?marioJump:marioStand, 100, marioY, 50,50);
     }
 
+    // === spawn obstacles ===
+    if(!paused && frameCount % 120 === 0){
+        const height = getObstacleHeight();
+        const type = Math.random() < 0.3 ? "triangle" : "square";
+        obstacles.push({x: canvas.width, y: groundY - height, w: 30, h: height, type: type});
+    }
+
     // === spawn star ===
-    if(level >= 2 && !star) {
-        if(Math.random() < 0.1){ // 10% de chance
+    if(level >= 2 && !star && !starSpawnedThisLevel){
+        if(Math.random() < 0.1){ // 10% par niveau
             let starY;
-            // 50% de chance d'apparaître au-dessus d'un obstacle existant
             if(obstacles.length > 0 && Math.random() < 0.5){
+                // au-dessus d'un obstacle existant
                 const ob = obstacles[Math.floor(Math.random()*obstacles.length)];
-                starY = ob.y - 40; // juste au-dessus de l'obstacle
+                starY = ob.y - 40; 
             } else {
-                // hauteur libre pour sauter
-                starY = groundY - 150 - Math.random() * 100; // entre 150 et 250px du sol
+                // hauteur libre pour sauter (50 à 200 px du sol)
+                starY = groundY - 50 - Math.random()*150; 
             }
             star = {x: canvas.width, y: starY, w: 40, h: 40};
-            starFloatOffset = 0;
-            starFloatDirection = 1;
         }
+        starSpawnedThisLevel = true; 
     }
 
     // === dessiner obstacles ===
@@ -202,6 +209,8 @@ function startMarioGame(autoStart = false) {
         level=1;
         levelEl.textContent="Level "+level;
         nextAccelerationDelay = 15000 + Math.random()*5000;
+        star = null;
+        starSpawnedThisLevel = false;
 
         deathSound.onended = ()=>{
           paused=false;
@@ -256,6 +265,7 @@ function startMarioGame(autoStart = false) {
         powerUpSound.play().catch(()=>{});
         lastAccelerationTime = now;
         nextAccelerationDelay = 15000 + Math.random()*5000;
+        starSpawnedThisLevel = false; // reset pour le niveau suivant
       }
     }
 
