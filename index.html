@@ -156,12 +156,23 @@ function startMarioGame(autoStart = false) {
       const type = Math.random() < 0.3 ? "triangle" : "square";
       obstacles.push({x: canvas.width, y: groundY - height, w: 30, h: height, type: type});
 
-      if(level >= 2 && !star && Math.random() < 0.1){
-        star = {x: canvas.width, y: groundY - height - 80, w: 40, h: 40};
-        starFloatOffset = 0;
-        starFloatDirection = 1;
+      // === spawn star ===
+      if(level >= 2 && !star) {
+          if(Math.random() < 0.1){ // 10% de chance
+              let starY;
+              // 50% de chance d'apparaître au-dessus d'un obstacle existant
+              if(obstacles.length > 0 && Math.random() < 0.5){
+                  const ob = obstacles[Math.floor(Math.random()*obstacles.length)];
+                  starY = ob.y - 40; // juste au-dessus de l'obstacle
+              } else {
+                  // hauteur libre pour sauter
+                  starY = groundY - 150 - Math.random() * 100; // entre 150 et 250px du sol
+              }
+              star = {x: canvas.width, y: starY, w: 40, h: 40};
+              starFloatOffset = 0;
+              starFloatDirection = 1;
+          }
       }
-    }
 
     // === dessiner obstacles ===
     ctx.fillStyle="#000";
