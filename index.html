@@ -23,10 +23,16 @@ body {
 </style>
 </head>
 <body>
-<button id="startBtn">Start</button>
+<button id="startBtn">Start1</button>
 
 <script>
+function isMobile() {
+  return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+}
+
 function startMarioGame(autoStart = false) {
+  const mobile = isMobile();
+
   document.documentElement.style.background = "#fff";
   document.body.style.background = "#fff";
   document.body.innerHTML = "";
@@ -39,10 +45,16 @@ function startMarioGame(autoStart = false) {
 
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
   const ctx = canvas.getContext("2d");
   ctx.imageSmoothingEnabled = true;
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    if(mobile) marioBaseY = canvas.height * 0.6;
+  }
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas();
 
   // === HUD ===
   const scoreEl = document.createElement("div");
@@ -83,7 +95,13 @@ function startMarioGame(autoStart = false) {
   const starImg = new Image(); starImg.src = "super_star.png";
   const skateboardImg = new Image(); skateboardImg.src = "skateboard.png";
 
-  let marioY = canvas.height - 150;
+  // === Variables de jeu ===
+  let marioSize = mobile ? canvas.height*0.1 : 50;
+  let skateboardWidth = mobile ? marioSize*1.3 : 65;
+  let skateboardHeight = mobile ? marioSize*0.5 : 25;
+  let marioX = 100;
+  let marioBaseY = mobile ? canvas.height * 0.6 : canvas.height - 150;
+  let marioY = marioBaseY;
   let marioVY = 0;
   let jumping = false;
   const obstacles = [];
@@ -95,7 +113,7 @@ function startMarioGame(autoStart = false) {
   let paused = false;
   let deathAnimationY = 0;
   let deathAnimationVY = -10;
-  const groundY = canvas.height - 100;
+  const groundY = mobile ? canvas.height * 0.6 + marioSize : canvas.height - 100;
 
   let level = 1;
   let nextAccelerationDelay = 15000 + Math.random() * 5000;
@@ -112,7 +130,12 @@ function startMarioGame(autoStart = false) {
   // === Obstacles distance fixe ===
   const obstacleSpacing = 650;
 
-  function jump() { if(!jumping) { marioVY = -16; jumping = true; } }
+  function jump() {
+    if(!jumping){
+      marioVY = mobile ? -20 : -16;  // saut plus haut sur mobile
+      jumping = true;
+    }
+  }
 
   function getObstacleHeight() {
     let maxHeight = 65;
@@ -147,15 +170,14 @@ function startMarioGame(autoStart = false) {
     if(paused){
       deathAnimationVY += 0.5;
       deathAnimationY += deathAnimationVY;
-      ctx.drawImage(marioDeath, 100, groundY-50+deathAnimationY, 50,50);
+      ctx.drawImage(marioDeath, marioX, marioBaseY + deathAnimationY, marioSize, marioSize);
     } else {
       marioVY += 1;
       marioY += marioVY;
-      if(marioY > groundY-50){ marioY=groundY-50; marioVY=0; jumping=false; }
-      ctx.drawImage(jumping?marioJump:marioStand, 100, marioY, 50,50);
-
-      // skate affiché sous Mario (10px en dessous)
-      ctx.drawImage(skateboardImg, 90, groundY-18, 65, 25);
+      if(marioY > marioBaseY){ marioY = marioBaseY; marioVY = 0; jumping=false; }
+      ctx.drawImage(jumping?marioJump:marioStand, marioX, marioY, marioSize, marioSize);
+      // skate sous Mario
+      ctx.drawImage(skateboardImg, marioX - 10, marioBaseY + marioSize - 10, skateboardWidth, skateboardHeight);
     }
 
     // === spawn obstacles ===
@@ -163,7 +185,6 @@ function startMarioGame(autoStart = false) {
       if(obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - obstacleSpacing){
         const height = getObstacleHeight();
         const type = Math.random() < 0.3 ? "triangle" : "square";
-        // décollé du sol de 15px
         obstacles.push({x: canvas.width, y: groundY - height - 15, w: 30, h: height, type: type});
       }
     }
@@ -200,7 +221,7 @@ function startMarioGame(autoStart = false) {
       }
 
       // collision Mario
-      if(!invincible && !paused && 100+50>ob.x && 100<ob.x+ob.w && marioY+50>ob.y){
+      if(!invincible && !paused && marioX+marioSize>ob.x && marioX<ob.x+ob.w && marioY+marioSize>ob.y){
         paused = true;
         deathAnimationY=0;
         deathAnimationVY=-10;
@@ -209,7 +230,7 @@ function startMarioGame(autoStart = false) {
         music.pause();
         music.currentTime=0;
         obstacles.length=0;
-        marioY = groundY-50;
+        marioY = marioBaseY;
         marioVY=0;
         jumping=false;
         score=0;
@@ -240,7 +261,7 @@ function startMarioGame(autoStart = false) {
       }
       ctx.drawImage(starImg, star.x, star.y + starFloatOffset, star.w, star.h);
 
-      if(100+50>star.x && 100<star.x+star.w && marioY+50>star.y+starFloatOffset && marioY<star.y+starFloatOffset+star.h){
+      if(marioX+marioSize>star.x && marioX<star.x+star.w && marioY+marioSize>star.y+starFloatOffset && marioY<star.y+starFloatOffset+star.h){
         invincible = true;
         invincibleStartTime = performance.now();
         invincibleSound.currentTime=0;
