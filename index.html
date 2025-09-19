@@ -23,7 +23,7 @@ body {
 </style>
 </head>
 <body>
-<button id="startBtn">Start</button>
+<button id="startBtn">Start1</button>
 
 <script>
 function isMobile() {
@@ -251,11 +251,17 @@ function startMarioGame(autoStart = false) {
         starSpawnedThisLevel = false;
 
         deathSound.onended = ()=>{
-          paused=false;
+          paused = false;
+          score = 0; // reset score après fin du son
+          level = 1; // reset niveau à 1
+          levelEl.textContent = "Level " + level; // mettre à jour l'affichage
+          obstacleSpeed = 5; // reset vitesse
+          nextAccelerationDelay = 15000 + Math.random()*5000; // reset timer accélération
           startTime = performance.now();
           lastAccelerationTime = performance.now();
           music.play().catch(()=>{});
         };
+
       }
 
       if(ob.x+ob.w<0){ obstacles.splice(i,1); score++; }
