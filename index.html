@@ -23,7 +23,7 @@ body {
 </style>
 </head>
 <body>
-<button id="startBtn">Start1</button>
+<button id="startBtn">Start</button>
 
 <script>
 function isMobile() {
@@ -115,9 +115,11 @@ function startMarioGame(autoStart = false) {
     canvas.height = window.innerHeight;
 
     if(isMobile()){
+      // Mobile → centre vertical + agrandi
       groundY = canvas.height/2 + 50;
-      marioY = groundY - 80;
+      marioY = groundY - 80; // plus grand et saut plus haut
     } else {
+      // PC → sol en bas
       groundY = canvas.height - 100;
       marioY = groundY - 50;
     }
@@ -129,14 +131,14 @@ function startMarioGame(autoStart = false) {
 
   function jump() { 
     if(!jumping) { 
-      marioVY = isMobile() ? -20 : -16.35; 
+      marioVY = isMobile() ? -20 : -16.35; // saut plus haut sur mobile
       jumping = true; 
     } 
   }
 
   function getObstacleHeight() {
-    let maxHeight = isMobile() ? 90 : 65; // plus grand sur mobile
-    let minHeight = isMobile() ? 50 : 30;
+    let maxHeight = 65;
+    let minHeight = 30;
     let highProb = Math.min(0.3 + 0.05 * Math.floor(level/2), 0.7);
     return Math.random() < highProb ? Math.floor(Math.random()*(maxHeight-50)+50)
                                     : Math.floor(Math.random()*(50-minHeight)+minHeight);
@@ -171,11 +173,10 @@ function startMarioGame(autoStart = false) {
     const marioSize = isMobile() ? 90 : 50;
     const skateSize = isMobile() ? {w: 130, h: 50} : {w: 65, h: 25};
     const marioX = 100;
+
+    // Définir position du skate selon mobile ou PC
     const skateX = isMobile() ? marioX - 23 : marioX - 10;
     const skateY = isMobile() ? groundY - 33 : groundY - 18;
-
-    // Clignotement Mario si invincible
-    const marioVisible = !invincible || (Math.floor(performance.now()/100) % 2 === 0);
 
     if(paused){
       deathAnimationVY += 0.5;
@@ -185,8 +186,7 @@ function startMarioGame(autoStart = false) {
       marioVY += 1;
       marioY += marioVY;
       if(marioY > groundY-marioSize){ marioY=groundY-marioSize; marioVY=0; jumping=false; }
-
-      if(marioVisible) ctx.drawImage(jumping?marioJump:marioStand, marioX, marioY, marioSize, marioSize);
+      ctx.drawImage(jumping?marioJump:marioStand, marioX, marioY, marioSize, marioSize);
       ctx.drawImage(skateboardImg, skateX, skateY, skateSize.w, skateSize.h);
     }
 
@@ -195,9 +195,23 @@ function startMarioGame(autoStart = false) {
       if(obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - obstacleSpacing){
         const height = getObstacleHeight();
         const type = Math.random() < 0.3 ? "triangle" : "square";
-        const width = isMobile() ? 40 : 30; // plus large sur mobile
-        obstacles.push({x: canvas.width, y: groundY - height - 15, w: width, h: height, type: type});
+        obstacles.push({x: canvas.width, y: groundY - height - 15, w: 30, h: height, type: type});
       }
+    }
+
+    // === spawn star ===
+    if(level >= 2 && !star && !starSpawnedThisLevel){
+      if(Math.random() < 0.1){
+        let starY;
+        if(obstacles.length > 0 && Math.random() < 0.5){
+          const ob = obstacles[Math.floor(Math.random()*obstacles.length)];
+          starY = ob.y - 40; 
+        } else {
+          starY = groundY - 50 - Math.random()*150; 
+        }
+        star = {x: canvas.width, y: starY, w: 40, h: 40};
+      }
+      starSpawnedThisLevel = true; 
     }
 
     // === dessiner obstacles ===
@@ -225,11 +239,19 @@ function startMarioGame(autoStart = false) {
         music.pause();
         music.currentTime=0;
         obstacles.length=0;
+        marioY = groundY-marioSize;
+        marioVY=0;
+        jumping=false;
+        score=0;
+        obstacleSpeed=5;
+        level=1;
+        levelEl.textContent="Level "+level;
+        nextAccelerationDelay = 15000 + Math.random()*5000;
+        star = null;
+        starSpawnedThisLevel = false;
 
-        // Le score reste affiché jusqu'à la fin du deathSound
         deathSound.onended = ()=>{
           paused=false;
-          score = 0; // reset score après fin du son
           startTime = performance.now();
           lastAccelerationTime = performance.now();
           music.play().catch(()=>{});
