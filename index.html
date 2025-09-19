@@ -76,11 +76,12 @@ function startMarioGame(autoStart = false) {
   levelEl.textContent = "Level 1";
   document.body.appendChild(levelEl);
 
-  // === Mario & Star Sprites ===
+  // === Sprites ===
   const marioStand = new Image(); marioStand.src = "super_mario.png";
   const marioJump = new Image(); marioJump.src = "super_mario_jump.png";
   const marioDeath = new Image(); marioDeath.src = "super_mario_death.png";
   const starImg = new Image(); starImg.src = "super_star.png";
+  const skateboardImg = new Image(); skateboardImg.src = "skateboard.png";
 
   let marioY = canvas.height - 150;
   let marioVY = 0;
@@ -142,7 +143,7 @@ function startMarioGame(autoStart = false) {
     ctx.fillStyle = "#000";
     ctx.fillRect(0, groundY, canvas.width, 10);
 
-    // === Mario ===
+    // === Mario + Skate ===
     if(paused){
       deathAnimationVY += 0.5;
       deathAnimationY += deathAnimationVY;
@@ -152,6 +153,9 @@ function startMarioGame(autoStart = false) {
       marioY += marioVY;
       if(marioY > groundY-50){ marioY=groundY-50; marioVY=0; jumping=false; }
       ctx.drawImage(jumping?marioJump:marioStand, 100, marioY, 50,50);
+
+      // skate affiché sous Mario (10px en dessous)
+      ctx.drawImage(skateboardImg, 100, groundY-40, 50, 20);
     }
 
     // === spawn obstacles ===
@@ -159,19 +163,20 @@ function startMarioGame(autoStart = false) {
       if(obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width - obstacleSpacing){
         const height = getObstacleHeight();
         const type = Math.random() < 0.3 ? "triangle" : "square";
-        obstacles.push({x: canvas.width, y: groundY - height, w: 30, h: height, type: type});
+        // décollé du sol de 15px
+        obstacles.push({x: canvas.width, y: groundY - height - 15, w: 30, h: height, type: type});
       }
     }
 
     // === spawn star ===
     if(level >= 2 && !star && !starSpawnedThisLevel){
-        if(Math.random() < 0.8){ // 10% par niveau
+        if(Math.random() < 0.8){
             let starY;
             if(obstacles.length > 0 && Math.random() < 0.5){
                 const ob = obstacles[Math.floor(Math.random()*obstacles.length)];
                 starY = ob.y - 40; 
             } else {
-                starY = groundY - 50 - Math.random()*150; // hauteur accessible
+                starY = groundY - 50 - Math.random()*150; 
             }
             star = {x: canvas.width, y: starY, w: 40, h: 40};
         }
